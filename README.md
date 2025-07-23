@@ -1,0 +1,2 @@
+# weirdstring-inspector
+見た目では判別しにくいUnicode異常文字を検出するツール。セキュリティの教育用途やCTFに活用できる。
