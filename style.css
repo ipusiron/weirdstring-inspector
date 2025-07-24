@@ -1,12 +1,72 @@
+/* === CSS変数定義 === */
+:root {
+  /* ライトモード */
+  --bg-color: #f9f9f9;
+  --text-color: #333;
+  --heading-color: #2c3e50;
+  --input-bg: #fff;
+  --input-border: #ccc;
+  --button-bg: #3498db;
+  --button-hover-bg: #2980b9;
+  --box-bg: #fff;
+  --box-border: #ccc;
+  --tab-bg: #eee;
+  --tab-active-bg: #fff;
+  --tab-border: #ccc;
+  --tab-active-border: #aaa;
+  --footer-color: #666;
+  
+  /* ハイライト色はそのまま維持 */
+  --highlight-invisible: #ffd5d5;
+  --highlight-lookalike: #d5e8ff;
+  --highlight-control: #ffe7b2;
+  --highlight-zalgo: #e6d5ff;
+  --highlight-bidirectional: #ffddee;
+  --highlight-punctuation: #e6ffe6;
+  --highlight-emoji: #fff0cc;
+  --highlight-whitespace: #ddeeff;
+  --highlight-confused: #f0e6ff;
+}
+
+/* === ダークモード === */
+[data-theme="dark"] {
+  --bg-color: #1a1a1a;
+  --text-color: #e0e0e0;
+  --heading-color: #87ceeb;
+  --input-bg: #2a2a2a;
+  --input-border: #555;
+  --button-bg: #4a7c7e;
+  --button-hover-bg: #5a8c8e;
+  --box-bg: #2a2a2a;
+  --box-border: #555;
+  --tab-bg: #333;
+  --tab-active-bg: #2a2a2a;
+  --tab-border: #555;
+  --tab-active-border: #777;
+  --footer-color: #999;
+  
+  /* ダークモード用ハイライト色（少し暗めに調整） */
+  --highlight-invisible: #cc5555;
+  --highlight-lookalike: #5588cc;
+  --highlight-control: #cc9944;
+  --highlight-zalgo: #9966cc;
+  --highlight-bidirectional: #cc6699;
+  --highlight-punctuation: #66aa66;
+  --highlight-emoji: #ccaa55;
+  --highlight-whitespace: #6699cc;
+  --highlight-confused: #aa88cc;
+}
+
 /* === 全体レイアウト・中央寄せ === */
 body {
   font-family: sans-serif;
   margin: 2em;
-  background-color: #f9f9f9;
-  color: #333;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   line-height: 1.6;
   display: flex;
   justify-content: center;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 main {
@@ -16,7 +76,7 @@ main {
 
 /* === 見出し === */
 h1, h2, h3 {
-  color: #2c3e50;
+  color: var(--heading-color);
   margin-top: 1.5em;
   margin-bottom: 0.5em;
 }
@@ -28,10 +88,12 @@ textarea {
   padding: 0.5em;
   margin-top: 0.5em;
   margin-bottom: 1em;
-  border: 1px solid #ccc;
+  border: 1px solid var(--input-border);
   border-radius: 5px;
   font-family: monospace;
-  background-color: #fff;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 /* === ボタン類 === */
@@ -39,27 +101,54 @@ button {
   margin: 0.3em 0.3em 0.3em 0;
   padding: 0.4em 1em;
   font-size: 0.95em;
-  background-color: #3498db;
+  background-color: var(--button-bg);
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 button:hover {
-  background-color: #2980b9;
+  background-color: var(--button-hover-bg);
+}
+
+/* === テーマ切替ボタン === */
+.theme-toggle {
+  background-color: transparent;
+  border: 2px solid var(--text-color);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2em;
+  transition: transform 0.3s ease;
+}
+
+.theme-toggle:hover {
+  background-color: transparent;
+  transform: scale(1.1);
+}
+
+.theme-icon {
+  display: inline-block;
+  transition: transform 0.3s ease;
 }
 
 /* === 結果表示領域 === */
 #resultArea {
   margin-top: 1em;
   padding: 0.8em;
-  border: 1px solid #ccc;
+  border: 1px solid var(--box-border);
   border-radius: 5px;
-  background-color: #fff;
+  background-color: var(--box-bg);
   font-family: monospace;
   white-space: pre-wrap;
   word-wrap: break-word;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 #summaryList {
@@ -69,12 +158,13 @@ button:hover {
 
 /* === サンプル表示ボックス === */
 .sample-box {
-  background-color: #fff;
-  border: 1px solid #ccc;
+  background-color: var(--box-bg);
+  border: 1px solid var(--box-border);
   border-radius: 5px;
   padding: 0.8em;
   margin: 1em 0;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .sample-box p {
@@ -86,29 +176,30 @@ button:hover {
   display: flex;
   flex-wrap: wrap;
   margin: 1em 0 0.5em 0;
-  border-bottom: 2px solid #ccc;
+  border-bottom: 2px solid var(--tab-border);
 }
 
 .tab-button {
   padding: 0.5em 1em;
-  border: 1px solid #ccc;
+  border: 1px solid var(--tab-border);
   border-bottom: none;
-  background-color: #eee;
+  background-color: var(--tab-bg);
   margin-right: 0.3em;
   border-top-left-radius: 5px;
   border-top-right-radius: 5px;
   cursor: pointer;
-  color: #333;
+  color: var(--text-color);
   position: relative;
   top: 2px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .tab-button.active {
-  background-color: #fff;
-  color: #111;
+  background-color: var(--tab-active-bg);
+  color: var(--text-color);
   font-weight: bold;
-  border: 1px solid #aaa;
-  border-bottom: 2px solid #fff;
+  border: 1px solid var(--tab-active-border);
+  border-bottom: 2px solid var(--tab-active-bg);
   z-index: 2;
 }
 
@@ -120,39 +211,39 @@ button:hover {
 }
 
 .highlight.invisible {
-  background-color: #ffd5d5;
+  background-color: var(--highlight-invisible);
 }
 
 .highlight.lookalike {
-  background-color: #d5e8ff;
+  background-color: var(--highlight-lookalike);
 }
 
 .highlight.control {
-  background-color: #ffe7b2;
+  background-color: var(--highlight-control);
 }
 
 .highlight.zalgo {
-  background-color: #e6d5ff;
+  background-color: var(--highlight-zalgo);
 }
 
 .highlight.bidirectional {
-  background-color: #ffddee;
+  background-color: var(--highlight-bidirectional);
 }
 
 .highlight.punctuation {
-  background-color: #e6ffe6;
+  background-color: var(--highlight-punctuation);
 }
 
 .highlight.emoji {
-  background-color: #fff0cc;
+  background-color: var(--highlight-emoji);
 }
 
 .highlight.whitespace {
-  background-color: #ddeeff;
+  background-color: var(--highlight-whitespace);
 }
 
 .highlight.confused {
-  background-color: #f0e6ff;
+  background-color: var(--highlight-confused);
 }
 
 /* === フッター === */
@@ -160,11 +251,11 @@ footer {
   margin-top: 3em;
   text-align: center;
   font-size: 0.9em;
-  color: #666;
+  color: var(--footer-color);
 }
 
 .footer a {
-  color: #3498db;
+  color: var(--button-bg);
   text-decoration: none;
 }
 
