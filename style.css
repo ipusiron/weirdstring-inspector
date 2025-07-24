@@ -135,6 +135,26 @@ button:hover {
   background-color: #e6d5ff;
 }
 
+.highlight.bidirectional {
+  background-color: #ffddee;
+}
+
+.highlight.punctuation {
+  background-color: #e6ffe6;
+}
+
+.highlight.emoji {
+  background-color: #fff0cc;
+}
+
+.highlight.whitespace {
+  background-color: #ddeeff;
+}
+
+.highlight.confused {
+  background-color: #f0e6ff;
+}
+
 /* === フッター === */
 footer {
   margin-top: 3em;
