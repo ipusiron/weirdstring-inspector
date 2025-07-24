@@ -9,9 +9,14 @@
     <main>
       <div style="display: flex; justify-content: space-between; align-items: center;">
         <h1>🕵️ WeirdString Inspector</h1>
-        <button id="theme-toggle" class="theme-toggle" title="ダークモード切替">
-          <span class="theme-icon">🌙</span>
-        </button>
+        <div style="display: flex; gap: 10px;">
+          <button id="help-button" class="icon-button" title="ヘルプ">
+            <span class="help-icon">❓</span>
+          </button>
+          <button id="theme-toggle" class="theme-toggle icon-button" title="ダークモード切替">
+            <span class="theme-icon">🌙</span>
+          </button>
+        </div>
       </div>
 
       <!-- メイン領域 -->
@@ -104,6 +109,78 @@
         </div>
       </footer>
     </main>
+
+    <!-- ヘルプモーダル -->
+    <div id="help-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>📖 WeirdString Inspector ヘルプ</h2>
+          <button class="modal-close" title="閉じる">&times;</button>
+        </div>
+        <div class="modal-body">
+          <h3>🔍 このツールについて</h3>
+          <p>WeirdString Inspectorは、テキストに含まれる不審なUnicode文字を検出・可視化するセキュリティツールです。フィッシングやなりすまし、CTFチャレンジなどで使われる「見えない文字」や「そっくり文字」を発見できます。</p>
+
+          <h3>🎯 使い方</h3>
+          <ol>
+            <li><strong>文字列を入力</strong>: テキストエリアに検査したい文字列を入力またはペーストします</li>
+            <li><strong>自動検出</strong>: 入力と同時にリアルタイムで異常文字を検出します</li>
+            <li><strong>結果確認</strong>: 色付きハイライトで異常文字が表示されます</li>
+            <li><strong>詳細確認</strong>: ハイライトされた文字にマウスを合わせるとUnicodeコードポイントが表示されます</li>
+          </ol>
+
+          <h3>🏷️ 検出カテゴリ</h3>
+          <dl>
+            <dt><span class="highlight invisible">Invisible（見えない文字）</span></dt>
+            <dd>ゼロ幅スペース、BOM、ノンブレークスペースなど、視覚的に確認できない文字</dd>
+
+            <dt><span class="highlight lookalike">Look-alike（そっくり文字）</span></dt>
+            <dd>キリル文字の「а」（U+0430）やギリシャ文字の「α」（U+03B1）など、ラテン文字に似た異なる文字</dd>
+
+            <dt><span class="highlight control">Control（制御文字）</span></dt>
+            <dd>RLO（右から左への上書き）、タブ、改行、ベルなどの制御文字</dd>
+
+            <dt><span class="highlight zalgo">Zalgo（結合記号）</span></dt>
+            <dd>多重ダイアクリティカル記号による視覚的な妨害文字</dd>
+
+            <dt><span class="highlight bidirectional">Bidirectional（双方向制御）</span></dt>
+            <dd>LRI、RLI、PDFなど、テキストの表示方向を変更する制御文字</dd>
+
+            <dt><span class="highlight punctuation">Punctuation（紛らわしい記号）</span></dt>
+            <dd>全角ピリオド、様々なクォート記号、擬似記号など</dd>
+
+            <dt><span class="highlight emoji">Emoji ZWJ</span></dt>
+            <dd>ゼロ幅接合子（ZWJ）による絵文字の連結（例: 👨‍💻）</dd>
+
+            <dt><span class="highlight whitespace">Whitespace（空白偽装）</span></dt>
+            <dd>Hair Space、Thin Space、Narrow No-Break Spaceなど、通常の空白と見分けがつかない文字</dd>
+
+            <dt><span class="highlight confused">Confused Scripts</span></dt>
+            <dd>アラビア文字やデーヴァナーガリー文字など、混在すると紛らわしい文字</dd>
+          </dl>
+
+          <h3>💡 活用例</h3>
+          <ul>
+            <li><strong>セキュリティ監査</strong>: URLやメールアドレスの偽装チェック</li>
+            <li><strong>CTFチャレンジ</strong>: Forensics/Misc問題での隠し文字発見</li>
+            <li><strong>コード検査</strong>: ソースコードに紛れ込んだ異常文字の検出</li>
+            <li><strong>教育・学習</strong>: Unicode文字の仕組みと脆弱性の理解</li>
+          </ul>
+
+          <h3>⌨️ ショートカット</h3>
+          <ul>
+            <li><kbd>Esc</kbd>: このヘルプを閉じる</li>
+          </ul>
+
+          <h3>🌓 ダークモード</h3>
+          <p>右上の月/太陽アイコンをクリックすると、ダークモードとライトモードを切り替えられます。設定は自動的に保存されます。</p>
+
+          <h3>🔗 詳細情報</h3>
+          <p>GitHubリポジトリ: <a href="https://github.com/ipusiron/weirdstring-inspector" target="_blank">ipusiron/weirdstring-inspector</a></p>
+          <p>このツールは「生成AIで作るセキュリティツール100」プロジェクトの一環として開発されました。</p>
+        </div>
+      </div>
+    </div>
 
     <script src="samples.js"></script>
     <script src="script.js"></script>

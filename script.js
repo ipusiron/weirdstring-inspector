@@ -21,6 +21,30 @@ function updateThemeIcon(theme) {
   }
 }
 
+// --- モーダル機能 ---
+function openModal() {
+  const modal = document.getElementById('help-modal');
+  if (modal) {
+    modal.classList.add('show');
+    // Escキーで閉じる
+    document.addEventListener('keydown', handleModalEsc);
+  }
+}
+
+function closeModal() {
+  const modal = document.getElementById('help-modal');
+  if (modal) {
+    modal.classList.remove('show');
+    document.removeEventListener('keydown', handleModalEsc);
+  }
+}
+
+function handleModalEsc(e) {
+  if (e.key === 'Escape') {
+    closeModal();
+  }
+}
+
 // ページ読み込み時にテーマを初期化
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
@@ -29,6 +53,28 @@ document.addEventListener('DOMContentLoaded', () => {
   const themeToggle = document.getElementById('theme-toggle');
   if (themeToggle) {
     themeToggle.addEventListener('click', toggleTheme);
+  }
+  
+  // ヘルプボタンのイベントリスナー
+  const helpButton = document.getElementById('help-button');
+  if (helpButton) {
+    helpButton.addEventListener('click', openModal);
+  }
+  
+  // モーダル閉じるボタンのイベントリスナー
+  const modalClose = document.querySelector('.modal-close');
+  if (modalClose) {
+    modalClose.addEventListener('click', closeModal);
+  }
+  
+  // モーダル背景クリックで閉じる
+  const modal = document.getElementById('help-modal');
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
   }
 });
 
