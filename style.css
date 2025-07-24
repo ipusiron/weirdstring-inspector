@@ -1,0 +1,153 @@
+/* === 全体レイアウト・中央寄せ === */
+body {
+  font-family: sans-serif;
+  margin: 2em;
+  background-color: #f9f9f9;
+  color: #333;
+  line-height: 1.6;
+  display: flex;
+  justify-content: center;
+}
+
+main {
+  max-width: 900px;
+  width: 100%;
+}
+
+/* === 見出し === */
+h1, h2, h3 {
+  color: #2c3e50;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+/* === テキスト入力欄 === */
+textarea {
+  width: 100%;
+  font-size: 1em;
+  padding: 0.5em;
+  margin-top: 0.5em;
+  margin-bottom: 1em;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-family: monospace;
+  background-color: #fff;
+}
+
+/* === ボタン類 === */
+button {
+  margin: 0.3em 0.3em 0.3em 0;
+  padding: 0.4em 1em;
+  font-size: 0.95em;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #2980b9;
+}
+
+/* === 結果表示領域 === */
+#resultArea {
+  margin-top: 1em;
+  padding: 0.8em;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+  font-family: monospace;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+#summaryList {
+  margin-top: 0.5em;
+  padding-left: 1.2em;
+}
+
+/* === サンプル表示ボックス === */
+.sample-box {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 0.8em;
+  margin: 1em 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.sample-box p {
+  margin: 0.3em 0;
+}
+
+/* === サンプルカテゴリタブ === */
+#sample-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 1em 0 0.5em 0;
+  border-bottom: 2px solid #ccc;
+}
+
+.tab-button {
+  padding: 0.5em 1em;
+  border: 1px solid #ccc;
+  border-bottom: none;
+  background-color: #eee;
+  margin-right: 0.3em;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  cursor: pointer;
+  color: #333;
+  position: relative;
+  top: 2px;
+}
+
+.tab-button.active {
+  background-color: #fff;
+  color: #111;
+  font-weight: bold;
+  border: 1px solid #aaa;
+  border-bottom: 2px solid #fff;
+  z-index: 2;
+}
+
+/* === ハイライト（異常文字） === */
+.highlight {
+  font-weight: bold;
+  padding: 0 0.15em;
+  border-radius: 3px;
+}
+
+.highlight.invisible {
+  background-color: #ffd5d5;
+}
+
+.highlight.lookalike {
+  background-color: #d5e8ff;
+}
+
+.highlight.control {
+  background-color: #ffe7b2;
+}
+
+.highlight.zalgo {
+  background-color: #e6d5ff;
+}
+
+/* === フッター === */
+footer {
+  margin-top: 3em;
+  text-align: center;
+  font-size: 0.9em;
+  color: #666;
+}
+
+.footer a {
+  color: #3498db;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}

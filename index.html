@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>WeirdString Inspector</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main>
+      <h1>🕵️ WeirdString Inspector</h1>
+
+      <!-- メイン領域 -->
+      <section id="main-area">
+        <p>
+          怪しい文字列を入力すると、異常なUnicode文字（ゼロ幅スペース、Zalgo、そっくり文字など）を検出してハイライト表示します。
+        </p>
+
+        <textarea
+          id="inputText"
+          rows="5"
+          cols="80"
+          placeholder="ここに文字列を入力してください…"
+          oninput="analyzeInput()"
+        ></textarea>
+
+        <h2>🔍 検出結果</h2>
+        <div id="resultArea"></div>
+
+        <h3>📊 検出された異常の内訳</h3>
+        <ul id="summaryList"></ul>
+      </section>
+
+      <!-- サブ領域（サンプル学習用） -->
+      <section id="sample-area">
+        <h2>🧪 学習用サンプル</h2>
+
+        <!-- カテゴリタブ -->
+        <div id="sample-tabs">
+          <button
+            class="tab-button active"
+            onclick="switchSampleCategory('invisible')"
+          >
+            Invisible
+          </button>
+          <button
+            class="tab-button"
+            onclick="switchSampleCategory('lookalike')"
+          >
+            Look-alike
+          </button>
+          <button class="tab-button" onclick="switchSampleCategory('control')">
+            Control
+          </button>
+          <button class="tab-button" onclick="switchSampleCategory('zalgo')">
+            Zalgo
+          </button>
+          <button class="tab-button" onclick="switchSampleCategory('normal')">
+            Normal
+          </button>
+        </div>
+
+        <!-- サンプルリスト -->
+        <div id="sampleListArea"></div>
+      </section>
+
+      <footer>
+        <div class="footer">
+          🔗 GitHubリポジトリはこちら（
+          <a
+            href="https://github.com/ipusiron/weirdstring-inspector"
+            target="_blank"
+          >
+            ipusiron/weirdstring-inspector </a
+          >）
+        </div>
+      </footer>
+    </main>
+
+    <script src="samples.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
