@@ -45,6 +45,60 @@ function handleModalEsc(e) {
   }
 }
 
+// --- URLパラメータ解析 ---
+function parseUrlParameters() {
+  const params = new URLSearchParams(window.location.search);
+  const text = params.get('text');
+  const source = params.get('source');
+  const attackType = params.get('attack_type');
+  
+  if (text) {
+    try {
+      // URLデコード
+      const decodedText = decodeURIComponent(text);
+      
+      // 入力欄にセット
+      const input = document.getElementById('inputText');
+      if (input) {
+        input.value = decodedText;
+        // 自動解析実行
+        analyzeInput();
+      }
+      
+      // ClipThreat Studioからの呼び出しの場合、表示を追加
+      if (source === 'clipthreat-studio') {
+        showExternalSourceInfo(source, attackType);
+      }
+    } catch (error) {
+      console.error('URL parameter decode error:', error);
+    }
+  }
+}
+
+// --- 外部ツール連携表示 ---
+function showExternalSourceInfo(source, attackType) {
+  const resultArea = document.getElementById('resultArea');
+  if (resultArea && source === 'clipthreat-studio') {
+    const infoDiv = document.createElement('div');
+    infoDiv.style.cssText = `
+      background-color: var(--highlight-punctuation);
+      border: 1px solid var(--box-border);
+      border-radius: 5px;
+      padding: 0.8em;
+      margin-bottom: 1em;
+      font-size: 0.9em;
+    `;
+    
+    let infoText = '🔗 ClipThreat Studio から解析対象が渡されました';
+    if (attackType) {
+      infoText += `（攻撃タイプ: ${attackType}）`;
+    }
+    
+    infoDiv.textContent = infoText;
+    resultArea.parentNode.insertBefore(infoDiv, resultArea);
+  }
+}
+
 // ページ読み込み時にテーマを初期化
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
@@ -76,6 +130,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+  
+  // URLパラメータ処理
+  parseUrlParameters();
+  
+  // サンプルカテゴリ初期化
+  switchSampleCategory('invisible');
 });
 
 // --- 異常文字コードポイント定義 ---
@@ -296,10 +356,6 @@ function analyzeInput() {
   }
 }
 
-// --- 初期化 ---
-document.addEventListener('DOMContentLoaded', () => {
-  switchSampleCategory('invisible');
-});
 
 // --- デバッグ表示 ---
 function debugCharCodes(str) {
