@@ -307,6 +307,16 @@ function setSampleText(text) {
   analyzeInput();
 }
 
+// --- HTMLエスケープ関数（XSS対策） ---
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 // --- メイン解析ロジック ---
 function analyzeInput() {
   const input = document.getElementById('inputText').value;
@@ -333,10 +343,10 @@ function analyzeInput() {
         return `<span class="highlight ${key}" title="U+${code
           .toString(16)
           .toUpperCase()
-          .padStart(4, '0')}">${ch}</span>`;
+          .padStart(4, '0')}">${escapeHtml(ch)}</span>`;
       }
     }
-    return ch;
+    return escapeHtml(ch);
   });
 
   result.innerHTML = highlighted.join('');
