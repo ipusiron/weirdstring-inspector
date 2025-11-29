@@ -39,11 +39,30 @@ The tool detects 9 categories of suspicious characters:
 ## Development Commands
 
 This is a static site with no build process:
-- **Run locally**: Open `index.html` directly in a browser or use a local web server
+- **Run locally**: Open `index.html` directly in a browser, or use a local web server (`python -m http.server` or `npx serve`) for URL parameter testing
 - **Deploy**: Push to GitHub Pages (configured with `.nojekyll`)
 - **Testing**: Manual testing using the built-in samples in `samples.js`
+- **Debugging**: Use browser console to see `debugCharCodes()` output showing Unicode code points for each character
 
 No linting, build, or test commands are configured.
+
+## URL Parameter API
+
+The tool accepts GET parameters for external tool integration:
+```
+?text={URLエンコードされた文字列}&source={呼び出し元}&attack_type={攻撃タイプ}
+```
+- `text`: String to analyze (URL-encoded)
+- `source`: Calling tool name (e.g., `clipthreat-studio`)
+- `attack_type`: Optional attack type label
+
+Note: URL parameters only work when served via HTTP server, not when opening `index.html` directly.
+
+## Script Load Order
+
+In `index.html`, scripts must load in this order:
+1. `samples.js` - Sample data definitions (`sampleData` object)
+2. `script.js` - Main application logic (depends on `sampleData`)
 
 ## Important Notes
 

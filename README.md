@@ -1,3 +1,44 @@
+<!--
+---
+id: day023
+slug: weirdstring-inspector
+
+title: "WeirdString Inspector"
+
+subtitle_ja: "Unicode異常文字検出ツール"
+subtitle_en: "Unicode Anomaly Character Detector"
+
+description_ja: "Unicode文字列に潜む異常な文字（ゼロ幅スペース、そっくり文字、制御記号など）を検出・ハイライトするWebツール。フィッシングやCTFで使われる見えない文字を可視化します。"
+description_en: "A web tool that detects and highlights suspicious Unicode characters (zero-width spaces, look-alike characters, control codes, etc.) hidden in text strings. Visualizes invisible characters used in phishing and CTF challenges."
+
+category_ja:
+  - フォレンジック
+  - Webセキュリティ
+  - 文字列解析
+category_en:
+  - Forensics
+  - Web Security
+  - String Analysis
+
+difficulty: 4
+
+tags:
+  - unicode
+  - homoglyph
+  - zero-width
+  - zalgo
+  - bidi
+  - ctf
+  - forensics
+  - phishing-detection
+
+repo_url: "https://github.com/ipusiron/weirdstring-inspector"
+demo_url: "https://ipusiron.github.io/weirdstring-inspector/"
+
+hub: true
+---
+-->
+
 # 🕵️ WeirdString Inspector - Unicode異常文字検出ツール
 
 ![GitHub Repo stars](https://img.shields.io/github/stars/ipusiron/weirdstring-inspector?style=social)
