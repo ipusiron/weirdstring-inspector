@@ -1,6 +1,6 @@
 // --- ダークモード切替機能 ---
 function initTheme() {
-  let savedTheme = 'light';
+  let savedTheme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   try {
     const stored = localStorage.getItem('theme');
     if (stored === 'light' || stored === 'dark') savedTheme = stored;
@@ -21,31 +21,28 @@ function toggleTheme() {
 function updateThemeIcon(theme) {
   const themeIcon = document.querySelector('.theme-icon');
   if (themeIcon) {
-    themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+    themeIcon.textContent = theme === 'dark' ? t('theme.sun') : t('theme.moon');
   }
+  const button = document.getElementById('theme-toggle');
+  const label = theme === 'dark' ? t('theme.toLight') : t('theme.toDark');
+  button.setAttribute('aria-label', label);
+  button.setAttribute('aria-pressed', String(theme === 'dark'));
+  button.title = label;
 }
 
 // --- モーダル機能 ---
 function openModal() {
   const modal = document.getElementById('help-modal');
   if (modal) {
-    modal.classList.add('show');
-    // Escキーで閉じる
-    document.addEventListener('keydown', handleModalEsc);
+    modal.showModal();
+    modal.querySelector('.modal-close').focus();
   }
 }
 
 function closeModal() {
   const modal = document.getElementById('help-modal');
   if (modal) {
-    modal.classList.remove('show');
-    document.removeEventListener('keydown', handleModalEsc);
-  }
-}
-
-function handleModalEsc(e) {
-  if (e.key === 'Escape') {
-    closeModal();
+    modal.close();
   }
 }
 
@@ -87,6 +84,19 @@ document.addEventListener('DOMContentLoaded', () => {
   // モーダル背景クリックで閉じる
   const modal = document.getElementById('help-modal');
   if (modal) {
+    modal.addEventListener('close', () => helpButton.focus());
+    modal.addEventListener('keydown', event => {
+      if (event.key !== 'Tab') return;
+      const controls = Array.from(modal.querySelectorAll('button, a[href], [tabindex="0"]'));
+      const current = controls.indexOf(document.activeElement);
+      if (event.shiftKey && current <= 0) {
+        event.preventDefault();
+        controls.at(-1).focus();
+      } else if (!event.shiftKey && current === controls.length - 1) {
+        event.preventDefault();
+        controls[0].focus();
+      }
+    });
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
         closeModal();
@@ -99,7 +109,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initDetails();
   
   // サンプルカテゴリ初期化
-  switchSampleCategory('invisible');
+  initSampleTabs();
+  switchSampleCategory('tag');
 });
 
 // --- 辞書とDOMの共通処理 ---
@@ -123,7 +134,7 @@ function charName(char) {
   if (abbr?.startsWith('VS')) return t('charName.vs', { n: abbr.slice(2) });
   if (abbr === 'TAG:SP') return t('charName.tagSpace');
   if (abbr?.startsWith('TAG:')) return t('charName.tag', { ascii: abbr.slice(4) });
-  return char.category ? t('category.' + char.category) : t('char.ordinary');
+  return '';
 }
 
 function charLabel(char) {
@@ -138,13 +149,35 @@ function charLabel(char) {
   return char.ch;
 }
 
-// --- サンプル切替（データとタブは段階4で更新） ---
+// --- サンプル切替とキーボード操作 ---
+function initSampleTabs() {
+  const tabs = Array.from(document.querySelectorAll('#sample-tabs [role="tab"]'));
+  for (const [index, tab] of tabs.entries()) {
+    tab.addEventListener('click', () => switchSampleCategory(tab.dataset.category));
+    tab.addEventListener('keydown', event => {
+      let next = index;
+      if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+      else if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = tabs.length - 1;
+      else return;
+      event.preventDefault();
+      switchSampleCategory(tabs[next].dataset.category);
+      tabs[next].focus();
+    });
+  }
+}
+
 function switchSampleCategory(category) {
   const tabs = document.querySelectorAll('.tab-button');
-  tabs.forEach(btn => btn.classList.remove('active'));
-  const activeTab = Array.from(tabs).find(btn => btn.textContent.toLowerCase().includes(category));
-  if (activeTab) activeTab.classList.add('active');
+  tabs.forEach(button => {
+    const selected = button.dataset.category === category;
+    button.classList.toggle('active', selected);
+    button.setAttribute('aria-selected', String(selected));
+    button.tabIndex = selected ? 0 : -1;
+  });
   const area = document.getElementById('sampleListArea');
+  area.setAttribute('aria-labelledby', 'sample-tab-' + category);
   area.replaceChildren();
   for (const sample of sampleData[category] || []) {
     const box = element('div', undefined, 'sample-box');
@@ -297,7 +330,10 @@ function showCharDetail(char) {
     ['detail.gc', description.generalCategory], ['detail.utf8', description.utf8], ['detail.utf16', description.utf16],
     ['detail.escape', description.escape]
   ];
-  for (const [key, value] of fields) list.append(element('dt', t(key)), element('dd', value));
+  for (const [key, value] of fields) {
+    if (key === 'detail.name' && !value) continue;
+    list.append(element('dt', t(key)), element('dd', value));
+  }
   const link = element('a', t('detail.unicode'));
   link.href = 'https://util.unicode.org/UnicodeJsps/character.jsp?a=' + char.cp.toString(16).toUpperCase();
   link.target = '_blank';

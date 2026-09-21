@@ -2,6 +2,10 @@
   'use strict';
 
   const ja = {
+    'theme.sun': '☀️',
+    'theme.moon': '🌙',
+    'theme.toLight': 'ライトモードに切り替える',
+    'theme.toDark': 'ダークモードに切り替える',
     "detail.heading": "選んだ文字：{codePoint}",
     "detail.name": "名前",
     "detail.category": "種類",

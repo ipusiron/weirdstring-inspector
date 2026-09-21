@@ -125,7 +125,7 @@ const expected = {
   "script.Other": "その他"
 };
 test('pure classic scripts with conditional CommonJS exports', () => {
-  for (const file of ['weirdstring-logic.js', 'weirdstring-messages.js', 'weirdstring-data.js']) {
+  for (const file of ['weirdstring-logic.js', 'weirdstring-messages.js', 'weirdstring-data.js', 'samples.js']) {
     const source = read(file);
     assert.doesNotMatch(source, /\b(?:document|window|navigator|localStorage|console)\s*[.(]|\bfetch\s*\(/);
     assert.doesNotMatch(source, /^\s*(?:export|import)\s/m);
@@ -162,4 +162,16 @@ test('UI dictionary keys exist', () => {
   const literalKeys = keys.filter(key => !key.endsWith('.'));
   assert.ok(literalKeys.length > 0);
   for (const key of literalKeys) assert.ok(Object.hasOwn(M.ja, key), key);
+});
+
+test('UI avoids HTML insertion, logging, networking and Japanese string literals', () => {
+  for (const file of ['script.js', 'weirdstring-logic.js', 'weirdstring-messages.js']) {
+    const source = read(file);
+    assert.doesNotMatch(source, /innerHTML|insertAdjacentHTML|console\.|alert\(|setAttribute\(['"]style|\.cssText/);
+    assert.doesNotMatch(source, /decodeURIComponent|fetch\s*\(|XMLHttpRequest|WebSocket|sendBeacon/);
+    if (file !== 'weirdstring-messages.js') {
+      const uncommented = source.replace(/\/\*[^]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+      assert.doesNotMatch(uncommented, /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u);
+    }
+  }
 });
