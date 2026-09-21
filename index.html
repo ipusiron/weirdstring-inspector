@@ -62,6 +62,40 @@
         <div id="view-logical" class="text-view"></div>
         <p id="view-limit"></p>
         <div id="char-detail" aria-live="polite"></div>
+
+        <section id="hidden-panel" hidden>
+          <h3>隠された内容</h3>
+          <div id="hidden-content"></div>
+        </section>
+        <section id="token-panel" hidden>
+          <h3>語の判定</h3>
+          <ul id="token-list"></ul>
+        </section>
+        <section id="comparable-panel" hidden>
+          <h3>比較用の文字列</h3>
+          <p>見えない文字を取り除き、そっくり文字と互換文字をASCIIに置き換えたものです。キーワードの検索やドメインの見比べに使います。並びは中身の順のままです。</p>
+          <pre id="comparable-text"></pre>
+          <button type="button" id="copy-comparable">コピー</button>
+        </section>
+        <section id="normalization-panel" hidden>
+          <h3>正規化</h3>
+          <ul id="normalization-list"></ul>
+        </section>
+        <h3>文字の表</h3>
+        <label><input type="checkbox" id="table-all">すべての文字を表示</label>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="文字の表（横にスクロールできます）">
+          <table id="char-table">
+            <caption>コードポイントごとの詳細</caption>
+            <thead><tr>
+              <th scope="col">位置</th><th scope="col">文字</th><th scope="col">コードポイント</th>
+              <th scope="col">種類</th><th scope="col">重大度</th><th scope="col">名前</th>
+              <th scope="col">スクリプト</th><th scope="col">一般カテゴリ</th><th scope="col">UTF-8</th><th scope="col">エスケープ表記</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p id="table-limit"></p>
+        <p id="status" role="status"></p>
       </section>
 
       <!-- サブ領域（サンプル学習用） -->

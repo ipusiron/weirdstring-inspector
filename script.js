@@ -96,6 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // 入力の経路を初期化
   initInput();
+  initDetails();
   
   // サンプルカテゴリ初期化
   switchSampleCategory('invisible');
@@ -230,6 +231,8 @@ function renderAnalysis() {
   document.getElementById('view-rendered').textContent = result.text;
   renderLogical(result);
   document.getElementById('char-detail').textContent = t('detail.initial');
+  renderPanels(result);
+  document.getElementById('status').textContent = '';
 }
 
 function renderLogical(result) {
@@ -263,4 +266,110 @@ function renderLogical(result) {
   flush();
   view.replaceChildren(fragment);
   document.getElementById('view-limit').textContent = result.chars.length > L.VIEW_LIMIT ? t('view.limit') : '';
+}
+
+// --- 詳細・コピー ---
+function scriptName(name) {
+  return Object.hasOwn(WeirdStringMessages.ja, 'script.' + name) ? t('script.' + name) : name;
+}
+
+function initDetails() {
+  document.getElementById('view-logical').addEventListener('click', event => {
+    const chip = event.target.closest('.chip');
+    if (!chip) return;
+    for (const button of document.querySelectorAll('.chip')) button.setAttribute('aria-pressed', String(button === chip));
+    showCharDetail(currentResult.chars[Number(chip.dataset.index)]);
+  });
+  document.getElementById('table-all').addEventListener('change', () => renderTable(currentResult));
+  document.getElementById('copy-comparable').addEventListener('click', () => copyText(currentResult.comparable));
+}
+
+function showCharDetail(char) {
+  const description = L.describeCodePoint(char.cp);
+  const detail = document.getElementById('char-detail');
+  detail.replaceChildren();
+  const heading = element('h3', t('detail.heading', { codePoint: description.codePoint }));
+  const list = element('dl', undefined, 'detail-list');
+  const fields = [
+    ['detail.name', [description.abbr, charName(char)].filter(Boolean).join(' / ')],
+    ['detail.category', t('category.' + char.category)], ['detail.severity', t('severity.' + char.severity)],
+    ['detail.reason', t('reason.' + char.reason, { ascii: char.ascii })], ['detail.script', scriptName(description.script)],
+    ['detail.gc', description.generalCategory], ['detail.utf8', description.utf8], ['detail.utf16', description.utf16],
+    ['detail.escape', description.escape]
+  ];
+  for (const [key, value] of fields) list.append(element('dt', t(key)), element('dd', value));
+  const link = element('a', t('detail.unicode'));
+  link.href = 'https://util.unicode.org/UnicodeJsps/character.jsp?a=' + char.cp.toString(16).toUpperCase();
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  detail.append(heading, list, link);
+}
+
+async function copyText(text) {
+  try {
+    if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') throw new Error('Clipboard unavailable');
+    await navigator.clipboard.writeText(text);
+    document.getElementById('status').textContent = t('copy.success');
+  } catch {
+    document.getElementById('status').textContent = t('copy.failure');
+  }
+}
+
+function renderPanels(result) {
+  const hidden = document.getElementById('hidden-content');
+  hidden.replaceChildren();
+  document.getElementById('hidden-panel').hidden = result.hidden.length === 0;
+  for (const item of result.hidden) {
+    const block = element('div', undefined, 'hidden-entry');
+    block.append(element('p', t('hidden.item', {
+      kind: t('hidden.' + item.kind), start: item.start + 1, count: item.count
+    })));
+    block.append(element('pre', item.text === null ? t('hidden.unreadable') : item.text));
+    if (item.bytes !== null) block.append(element('p', t('hidden.bytes', { bytes: item.bytes })));
+    if (['tag', 'variation'].includes(item.kind) && item.text) {
+      const copy = element('button', t('hidden.copy'));
+      copy.type = 'button';
+      copy.addEventListener('click', () => copyText(item.text));
+      block.append(copy);
+    }
+    hidden.append(block);
+  }
+  const tokens = result.tokens.filter(token => token.level === 'mixed' || token.wholeScriptConfusable);
+  document.getElementById('token-panel').hidden = tokens.length === 0;
+  const list = document.getElementById('token-list');
+  list.replaceChildren();
+  for (const token of tokens) list.append(element('li', t('token.item', {
+    text: token.text, comparable: token.comparable, scripts: token.scripts.map(scriptName).join(t('token.separator')),
+    level: t(token.wholeScriptConfusable ? 'level.wholeScript' : 'level.mixed')
+  })));
+  document.getElementById('comparable-panel').hidden = result.verdict === 'clean' || !result.comparableDiffers;
+  document.getElementById('comparable-text').textContent = result.comparable;
+  document.getElementById('normalization-panel').hidden = !result.text;
+  const forms = document.getElementById('normalization-list');
+  forms.replaceChildren();
+  for (const [form, info] of Object.entries(result.normalization)) {
+    forms.append(element('li', t(info.same ? 'normalization.same' : 'normalization.changed', {
+      form, before: result.length.codePoints, after: info.codePoints
+    })));
+  }
+  renderTable(result);
+}
+
+function renderTable(result) {
+  const all = document.getElementById('table-all').checked;
+  const chars = all ? result.chars : result.chars.filter(char => char.category);
+  const fragment = document.createDocumentFragment();
+  for (const char of chars.slice(0, L.TABLE_LIMIT)) {
+    const description = L.describeCodePoint(char.cp);
+    const row = element('tr');
+    const values = [char.index + 1, charLabel(char), description.codePoint,
+      char.category ? t('category.' + char.category) : t('table.none'),
+      char.severity === 'none' ? t('table.none') : t('severity.' + char.severity),
+      [description.abbr, charName(char)].filter(Boolean).join(' / '), scriptName(description.script),
+      description.generalCategory, description.utf8, description.escape];
+    for (const value of values) row.append(element('td', value));
+    fragment.append(row);
+  }
+  document.querySelector('#char-table tbody').replaceChildren(fragment);
+  document.getElementById('table-limit').textContent = chars.length > L.TABLE_LIMIT ? t('table.limit') : '';
 }
