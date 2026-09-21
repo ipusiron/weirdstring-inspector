@@ -542,6 +542,42 @@ button:disabled {
   padding-block: 0.6rem;
 }
 
+.language-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+select, input[type="file"] {
+  min-height: 44px;
+  min-width: 44px;
+  max-width: 100%;
+  font: inherit;
+  font-size: 16px;
+  color: var(--text-color);
+  background: var(--input-bg);
+}
+
+button {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.header-actions {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .page-header {
+    flex-wrap: wrap;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+}
+
 .removal-choice {
   display: flex;
   align-items: center;

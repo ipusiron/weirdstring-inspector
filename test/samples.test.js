@@ -387,14 +387,14 @@ test('all 41 independently specified sample verdicts, counts, contents and conte
   assert.deepEqual(Object.keys(samples), [
     'tag', 'bidi', 'variation', 'invisible', 'control', 'whitespace', 'private', 'combining', 'compat', 'lookalike', 'normal'
   ]);
-  assert.deepEqual(Object.values(samples).map(group => group.length), [3, 5, 3, 5, 3, 4, 1, 4, 2, 8, 3]);
-  const flat = Object.values(samples).flat();
+  assert.deepEqual(Object.values(samples).map(group => group.length), [5, 5, 4, 5, 3, 4, 1, 4, 2, 11, 3]);
+  const flat = Object.values(samples).flat().filter(sample => /^[a-z]+-\d+$/.test(sample.id));
   assert.equal(flat.length, 41);
   assert.equal(expected.length, 41);
   expected.forEach((row, index) => {
     const [, category, name, verdict, counts, comparable, extra] = row;
     const sample = flat[index];
-    assert.equal(sample.name, name);
+    assert.equal(require('../weirdstring-messages.js').ja[sample.nameKey], name);
     assert.ok(samples[category].includes(sample));
     const result = L.analyze(sample.text);
     assert.equal(result.verdict, verdict, name);
@@ -427,22 +427,26 @@ test('all 41 independently specified sample verdicts, counts, contents and conte
     }
   });
 });
-test('generated samples.md preserves all 37 literal examples and explains four control examples', () => {
+test('generated Japanese and English examples preserve literals and explain the four control examples', () => {
   const run = spawnSync(process.execPath, ['tools/build-samples-md.js', '--check'], { cwd: root, encoding: 'utf8' });
   assert.equal(run.status, 0, run.stdout + run.stderr);
-  const md = fs.readFileSync(path.join(root, 'samples.md'), 'utf8');
-  const rows = md.split(/\r?\n/).filter(line => line.startsWith('| ') && !line.startsWith('| サンプル名'));
-  assert.equal(rows.length, 41);
-  let actual = 0;
-  for (const sample of Object.values(samples).flat()) {
-    const row = rows.find(line => line.startsWith('| ' + sample.name + ' |'));
-    assert.ok(row, sample.name);
-    const cell = row.split('|')[2].trim();
-    if (/[\u0000-\u001f\u007f]/.test(sample.text)) assert.equal(cell, '（エスケープ表記を参照）');
-    else {
-      assert.equal(cell.slice(1, -1), sample.text);
-      actual++;
+  const M = require('../weirdstring-messages.js');
+  for (const lang of ['ja', 'en']) {
+    const md = fs.readFileSync(path.join(root, lang === 'ja' ? 'samples.md' : 'samples.en.md'), 'utf8');
+    const rows = md.split(/\r?\n/).filter(line => line.startsWith('| ') && line !== M.format(lang, 'samples.header'));
+    assert.equal(rows.length, 47);
+    let actual = 0;
+    for (const sample of Object.values(samples).flat()) {
+      const name = M.format(lang, sample.nameKey);
+      const row = rows.find(line => line.startsWith('| ' + name + ' |'));
+      assert.ok(row, name);
+      const cell = row.split('|')[2].trim();
+      if (/[\u0000-\u001f\u007f]/.test(sample.text)) assert.equal(cell, M.format(lang, 'samples.escaped'));
+      else {
+        assert.equal(cell.slice(1, -1), sample.text);
+        actual++;
+      }
     }
+    assert.equal(actual, 43);
   }
-  assert.equal(actual, 37);
 });

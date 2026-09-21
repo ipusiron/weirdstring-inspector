@@ -10,15 +10,22 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <noscript>このツールを使うにはJavaScriptを有効にしてください。</noscript>
+    <noscript>このツールを使うにはJavaScriptを有効にしてください。 Enable JavaScript to use this tool.</noscript>
     <main>
       <div class="page-header">
         <h1>🕵️ WeirdString Inspector</h1>
         <div class="header-actions">
-          <button id="help-button" type="button" class="icon-button" title="ヘルプ" aria-label="ヘルプ">
+          <label class="language-control" for="language-select">
+            <span data-i18n="language.label">表示言語</span>
+            <select id="language-select">
+              <option value="ja" lang="ja">日本語</option>
+              <option value="en" lang="en">English</option>
+            </select>
+          </label>
+          <button id="help-button" type="button" class="icon-button" title="ヘルプ" data-i18n-title="ui.attr129" aria-label="ヘルプ" data-i18n-aria-label="ui.attr130">
             <span class="help-icon">❓</span>
           </button>
-          <button id="theme-toggle" type="button" class="theme-toggle icon-button" aria-label="ダークモードに切り替える" aria-pressed="false">
+          <button id="theme-toggle" type="button" class="theme-toggle icon-button" aria-label="ダークモードに切り替える" data-i18n-aria-label="ui.attr131" aria-pressed="false">
             <span class="theme-icon">🌙</span>
           </button>
         </div>
@@ -27,16 +34,16 @@
       <!-- メイン領域 -->
       <section id="main-area">
         <p>
-          怪しい文字列を入力すると、異常なUnicode文字（ゼロ幅スペース、Zalgo、そっくり文字など）を検出し、重大度と理由を表示します。
+          <span data-i18n="ui.text1">怪しい文字列を入力すると、異常なUnicode文字（ゼロ幅スペース、Zalgo、そっくり文字など）を検出し、重大度と理由を表示します。</span>
         </p>
 
         <p id="source-info" class="source-info" hidden></p>
-        <label for="inputText">検査する文字列</label>
+        <label for="inputText"><span data-i18n="ui.text2">検査する文字列</span></label>
         <textarea
           id="inputText"
           rows="5"
           cols="80"
-          placeholder="ここに文字列を入力してください…"
+          placeholder="ここに文字列を入力してください…" data-i18n-placeholder="ui.attr132"
           maxlength="200000"
           spellcheck="false"
           autocapitalize="off"
@@ -44,114 +51,115 @@
         ></textarea>
 
         <fieldset>
-          <legend>入力の読み方</legend>
-          <label><input type="radio" name="input-mode" id="mode-plain" value="plain" checked>そのまま読む</label>
-          <label><input type="radio" name="input-mode" id="mode-escape" value="escape">エスケープ表記を解釈する（\u{202E}・\rなど）</label>
+          <legend><span data-i18n="ui.text3">入力の読み方</span></legend>
+          <label><input type="radio" name="input-mode" id="mode-plain" value="plain" checked><span data-i18n="ui.text4">そのまま読む</span></label>
+          <label><input type="radio" name="input-mode" id="mode-escape" value="escape">
+            <span data-i18n="ui.text5">エスケープ表記を解釈する</span> (<code>\u{202E}</code>, <code>\r</code>)</label>
         </fieldset>
         <div class="input-actions">
-          <button type="button" id="to-escape">エスケープ表記に直す</button>
-          <button type="button" id="to-plain" disabled>解釈した結果を入力欄へ戻す</button>
-          <button type="button" id="clear-input">クリア</button>
+          <button type="button" id="to-escape"><span data-i18n="ui.text6">エスケープ表記に直す</span></button>
+          <button type="button" id="to-plain" disabled><span data-i18n="ui.text7">解釈した結果を入力欄へ戻す</span></button>
+          <button type="button" id="clear-input"><span data-i18n="ui.text8">クリア</span></button>
         </div>
         <p id="input-stats"></p>
         <p id="input-message" role="status"></p>
 
         <details id="file-panel" class="action-panel">
-          <summary>UTF-8ファイルから入力</summary>
-          <p>1ファイル、1MiB・100,000コードポイントまで。BOMと改行を保持します。内容は外部へ送信しません。</p>
-          <label for="file-input">読み込むUTF-8ファイル</label>
+          <summary><span data-i18n="ui.text9">UTF-8ファイルから入力</span></summary>
+          <p><span data-i18n="ui.text10">1ファイル、1MiB・100,000コードポイントまで。BOMと改行を保持します。内容は外部へ送信しません。</span></p>
+          <label for="file-input"><span data-i18n="ui.text11">読み込むUTF-8ファイル</span></label>
           <input type="file" id="file-input">
           <p id="file-status" role="status"></p>
         </details>
 
-        <h2>🔍 検出結果</h2>
+        <h2><span data-i18n="ui.text12">🔍 検出結果</span></h2>
         <p id="verdict" role="status" data-verdict="empty"></p>
 
-        <h3>📊 検出された異常の内訳</h3>
+        <h3><span data-i18n="ui.text13">📊 検出された異常の内訳</span></h3>
         <ul id="summaryList" aria-live="polite"></ul>
-        <h3>見た目（ブラウザーがそのまま描いたもの）</h3>
+        <h3><span data-i18n="ui.text14">見た目（ブラウザーがそのまま描いたもの）</span></h3>
         <div id="view-rendered" class="text-view"></div>
-        <h3>中身（実際の並び。見えない文字はラベルで表示）</h3>
+        <h3><span data-i18n="ui.text15">中身（実際の並び。見えない文字はラベルで表示）</span></h3>
         <div id="view-logical" class="text-view"></div>
         <p id="view-limit"></p>
         <div id="char-detail" aria-live="polite"></div>
 
         <section id="hidden-panel" hidden>
-          <h3>隠された内容</h3>
+          <h3><span data-i18n="ui.text16">隠された内容</span></h3>
           <div id="hidden-content"></div>
         </section>
         <section id="token-panel" hidden>
-          <h3>語の判定</h3>
+          <h3><span data-i18n="ui.text17">語の判定</span></h3>
           <ul id="token-list"></ul>
         </section>
         <section id="comparable-panel" hidden>
-          <h3>比較用の文字列</h3>
-          <p>見えない文字を取り除き、そっくり文字と互換文字をASCIIに置き換えたものです。キーワードの検索やドメインの見比べに使います。並びは中身の順のままです。</p>
+          <h3><span data-i18n="ui.text18">比較用の文字列</span></h3>
+          <p><span data-i18n="ui.text19">見えない文字の一部を除き、対応するそっくり文字と互換文字をASCIIに置き換えます。比較の補助であり、見た目や安全性の一致を意味しません。</span></p>
           <pre id="comparable-text"></pre>
-          <button type="button" id="copy-comparable">コピー</button>
+          <button type="button" id="copy-comparable"><span data-i18n="ui.text20">コピー</span></button>
         </section>
         <section id="normalization-panel" hidden>
-          <h3>正規化</h3>
+          <h3><span data-i18n="ui.text21">正規化</span></h3>
           <ul id="normalization-list"></ul>
         </section>
         <details id="remove-panel" class="action-panel">
-          <summary>選択した文字を除いてコピー</summary>
-          <p>危険と判定した除去候補だけを初期選択します。注意の候補は自分で選べます。原文は変わりません。</p>
-          <button type="button" id="prepare-removal">除去候補を確認</button>
+          <summary><span data-i18n="ui.text22">選択した文字を除いてコピー</span></summary>
+          <p><span data-i18n="ui.text23">危険と判定した除去候補だけを初期選択します。注意の候補は自分で選べます。原文は変わりません。</span></p>
+          <button type="button" id="prepare-removal"><span data-i18n="ui.text24">除去候補を確認</span></button>
           <div id="removal-candidates"></div>
-          <label for="removal-preview">除去後の見た目（手動コピーもできます）</label>
+          <label for="removal-preview"><span data-i18n="ui.text25">除去後の見た目（手動コピーもできます）</span></label>
           <textarea id="removal-preview" rows="3" readonly spellcheck="false"></textarea>
-          <h4>除去後のエスケープ表記</h4>
+          <h4><span data-i18n="ui.text26">除去後のエスケープ表記</span></h4>
           <pre id="removal-escaped"></pre>
           <p id="removal-result" role="status"></p>
-          <p>除去後も不審な文字や危険な内容が残る場合があります。</p>
-          <button type="button" id="copy-removal" disabled>選択した文字を除いてコピー</button>
+          <p><span data-i18n="ui.text27">除去後も不審な文字や危険な内容が残る場合があります。</span></p>
+          <button type="button" id="copy-removal" disabled><span data-i18n="ui.text22">選択した文字を除いてコピー</span></button>
         </details>
         <details id="compare-panel" class="action-panel">
-          <summary>別の文字列と比較</summary>
-          <label for="compare-input">比較する文字列B（Aは上の検査入力）</label>
+          <summary><span data-i18n="ui.text28">別の文字列と比較</span></summary>
+          <label for="compare-input"><span data-i18n="ui.text29">比較する文字列B（Aは上の検査入力）</span></label>
           <textarea id="compare-input" rows="4" maxlength="200000" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
           <fieldset>
-            <legend>Bの読み方</legend>
-            <label><input type="radio" name="compare-mode" id="compare-plain" value="plain" checked>そのまま読む</label>
-            <label><input type="radio" name="compare-mode" id="compare-escape" value="escape">エスケープ表記を解釈する</label>
+            <legend><span data-i18n="ui.text30">Bの読み方</span></legend>
+            <label><input type="radio" name="compare-mode" id="compare-plain" value="plain" checked><span data-i18n="ui.text4">そのまま読む</span></label>
+            <label><input type="radio" name="compare-mode" id="compare-escape" value="escape"><span data-i18n="ui.text31">エスケープ表記を解釈する</span></label>
           </fieldset>
           <div class="input-actions">
-            <button type="button" id="compare-texts">AとBを比較</button>
-            <button type="button" id="swap-inputs">AとBを交換</button>
+            <button type="button" id="compare-texts"><span data-i18n="ui.text32">AとBを比較</span></button>
+            <button type="button" id="swap-inputs"><span data-i18n="ui.text33">AとBを交換</span></button>
           </div>
-          <p>一致の根拠を別々に表示します。見た目や安全性の一致、完全なUTS #39 skeletonを示すものではありません。</p>
+          <p><span data-i18n="ui.text34">一致の根拠を別々に表示します。見た目や安全性の一致、完全なUTS #39 skeletonを示すものではありません。</span></p>
           <div id="comparison-result" role="status"></div>
         </details>
         <details id="export-panel" class="action-panel">
-          <summary>レポートと共有リンク</summary>
-          <p>レポートは既定で概要のみです。原文と詳細を含める場合は、出力前に内容を確認してください。</p>
-          <label class="removal-choice"><input type="checkbox" id="report-details">原文と詳細を含める</label>
-          <button type="button" id="prepare-report">レポートを確認</button>
+          <summary><span data-i18n="ui.text35">レポートと共有リンク</span></summary>
+          <p><span data-i18n="ui.text36">レポートは既定で概要のみです。原文と詳細を含める場合は、出力前に内容を確認してください。</span></p>
+          <label class="removal-choice"><input type="checkbox" id="report-details"><span data-i18n="ui.text37">原文と詳細を含める</span></label>
+          <button type="button" id="prepare-report"><span data-i18n="ui.text38">レポートを確認</span></button>
           <p id="report-disclosure"></p>
-          <pre id="report-preview" tabindex="0" aria-label="レポートのプレビュー"></pre>
+          <pre id="report-preview" tabindex="0" aria-label="レポートのプレビュー" data-i18n-aria-label="ui.attr133"></pre>
           <div class="input-actions">
-            <button type="button" id="save-json" disabled>JSONで保存</button>
-            <button type="button" id="save-markdown" disabled>Markdownで保存</button>
+            <button type="button" id="save-json" disabled><span data-i18n="ui.text39">JSONで保存</span></button>
+            <button type="button" id="save-markdown" disabled><span data-i18n="ui.text40">Markdownで保存</span></button>
           </div>
           <p id="report-status" role="status"></p>
-          <h4>共有リンク</h4>
-          <p>検査する文字列Aを含みます。機密情報を共有しないでください。受取人、履歴、クリップボードから秘密になるものではありません。</p>
-          <button type="button" id="prepare-share">共有リンクを確認</button>
-          <label for="share-preview">共有するURL（手動コピーもできます）</label>
+          <h4><span data-i18n="ui.text41">共有リンク</span></h4>
+          <p><span data-i18n="ui.text42">検査する文字列Aを含みます。機密情報を共有しないでください。受取人、履歴、クリップボードから秘密になるものではありません。</span></p>
+          <button type="button" id="prepare-share"><span data-i18n="ui.text43">共有リンクを確認</span></button>
+          <label for="share-preview"><span data-i18n="ui.text44">共有するURL（手動コピーもできます）</span></label>
           <textarea id="share-preview" rows="3" readonly spellcheck="false"></textarea>
-          <button type="button" id="copy-share" disabled>共有リンクをコピー</button>
+          <button type="button" id="copy-share" disabled><span data-i18n="ui.text45">共有リンクをコピー</span></button>
           <p id="share-status" role="status"></p>
         </details>
-        <h3>文字の表</h3>
-        <label><input type="checkbox" id="table-all">すべての文字を表示</label>
-        <div class="table-scroll" tabindex="0" role="region" aria-label="文字の表（横にスクロールできます）">
+        <h3><span data-i18n="ui.text46">文字の表</span></h3>
+        <label><input type="checkbox" id="table-all"><span data-i18n="ui.text47">すべての文字を表示</span></label>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="文字の表（横にスクロールできます）" data-i18n-aria-label="ui.attr134">
           <table id="char-table">
-            <caption>コードポイントごとの詳細</caption>
+            <caption><span data-i18n="ui.text48">コードポイントごとの詳細</span></caption>
             <thead><tr>
-              <th scope="col">位置</th><th scope="col">文字</th><th scope="col">コードポイント</th>
-              <th scope="col">種類</th><th scope="col">重大度</th><th scope="col">名前</th>
-              <th scope="col">スクリプト</th><th scope="col">一般カテゴリ</th><th scope="col">UTF-8</th><th scope="col">エスケープ表記</th>
+              <th scope="col"><span data-i18n="ui.text49">位置</span></th><th scope="col"><span data-i18n="ui.text50">文字</span></th><th scope="col"><span data-i18n="ui.text51">コードポイント</span></th>
+              <th scope="col"><span data-i18n="ui.text52">種類</span></th><th scope="col"><span data-i18n="ui.text53">重大度</span></th><th scope="col"><span data-i18n="ui.text54">名前</span></th>
+              <th scope="col"><span data-i18n="ui.text55">スクリプト</span></th><th scope="col"><span data-i18n="ui.text56">一般カテゴリ</span></th><th scope="col">UTF-8</th><th scope="col"><span data-i18n="ui.text57">エスケープ表記</span></th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -162,32 +170,32 @@
 
       <!-- サブ領域（サンプル学習用） -->
       <section id="sample-area">
-        <h2>🧪 学習用サンプル</h2>
+        <h2><span data-i18n="ui.text58">🧪 学習用サンプル</span></h2>
 
         <!-- カテゴリタブ -->
-        <div id="sample-tabs" role="tablist" aria-label="サンプルの種類">
+        <div id="sample-tabs" role="tablist" aria-label="サンプルの種類" data-i18n-aria-label="ui.attr135">
           <button type="button" class="tab-button active" id="sample-tab-tag" role="tab"
-            data-category="tag" aria-controls="sampleListArea" aria-selected="true" tabindex="0">タグ文字</button>
+            data-category="tag" aria-controls="sampleListArea" aria-selected="true" tabindex="0"><span data-i18n="ui.text59">タグ文字</span></button>
           <button type="button" class="tab-button" id="sample-tab-bidi" role="tab"
-            data-category="bidi" aria-controls="sampleListArea" aria-selected="false" tabindex="-1">双方向制御</button>
+            data-category="bidi" aria-controls="sampleListArea" aria-selected="false" tabindex="-1"><span data-i18n="ui.text60">双方向制御</span></button>
           <button type="button" class="tab-button" id="sample-tab-variation" role="tab"
-            data-category="variation" aria-controls="sampleListArea" aria-selected="false" tabindex="-1">異体字セレクター</button>
+            data-category="variation" aria-controls="sampleListArea" aria-selected="false" tabindex="-1"><span data-i18n="ui.text61">異体字セレクター</span></button>
           <button type="button" class="tab-button" id="sample-tab-invisible" role="tab"
-            data-category="invisible" aria-controls="sampleListArea" aria-selected="false" tabindex="-1">不可視文字</button>
+            data-category="invisible" aria-controls="sampleListArea" aria-selected="false" tabindex="-1"><span data-i18n="ui.text62">不可視文字</span></button>
           <button type="button" class="tab-button" id="sample-tab-control" role="tab"
-            data-category="control" aria-controls="sampleListArea" aria-selected="false" tabindex="-1">制御文字</button>
+            data-category="control" aria-controls="sampleListArea" aria-selected="false" tabindex="-1"><span data-i18n="ui.text63">制御文字</span></button>
           <button type="button" class="tab-button" id="sample-tab-whitespace" role="tab"
-            data-category="whitespace" aria-controls="sampleListArea" aria-selected="false" tabindex="-1">特殊な空白</button>
+            data-category="whitespace" aria-controls="sampleListArea" aria-selected="false" tabindex="-1"><span data-i18n="ui.text64">特殊な空白</span></button>
           <button type="button" class="tab-button" id="sample-tab-private" role="tab"
-            data-category="private" aria-controls="sampleListArea" aria-selected="false" tabindex="-1">私用領域</button>
+            data-category="private" aria-controls="sampleListArea" aria-selected="false" tabindex="-1"><span data-i18n="ui.text65">私用領域</span></button>
           <button type="button" class="tab-button" id="sample-tab-combining" role="tab"
-            data-category="combining" aria-controls="sampleListArea" aria-selected="false" tabindex="-1">結合記号</button>
+            data-category="combining" aria-controls="sampleListArea" aria-selected="false" tabindex="-1"><span data-i18n="ui.text66">結合記号</span></button>
           <button type="button" class="tab-button" id="sample-tab-compat" role="tab"
-            data-category="compat" aria-controls="sampleListArea" aria-selected="false" tabindex="-1">互換文字</button>
+            data-category="compat" aria-controls="sampleListArea" aria-selected="false" tabindex="-1"><span data-i18n="ui.text67">互換文字</span></button>
           <button type="button" class="tab-button" id="sample-tab-lookalike" role="tab"
-            data-category="lookalike" aria-controls="sampleListArea" aria-selected="false" tabindex="-1">そっくり文字</button>
+            data-category="lookalike" aria-controls="sampleListArea" aria-selected="false" tabindex="-1"><span data-i18n="ui.text68">そっくり文字</span></button>
           <button type="button" class="tab-button" id="sample-tab-normal" role="tab"
-            data-category="normal" aria-controls="sampleListArea" aria-selected="false" tabindex="-1">正常</button>
+            data-category="normal" aria-controls="sampleListArea" aria-selected="false" tabindex="-1"><span data-i18n="ui.text69">正常</span></button>
         </div>
 
         <!-- サンプルリスト -->
@@ -196,14 +204,14 @@
 
       <footer>
         <div class="footer">
-          🔗 GitHubリポジトリはこちら（
+          <span data-i18n="ui.text70">🔗 GitHubリポジトリ</span>
           <a
             href="https://github.com/ipusiron/weirdstring-inspector"
             target="_blank"
             rel="noopener noreferrer"
           >
             ipusiron/weirdstring-inspector </a
-          >）
+          >
         </div>
       </footer>
     </main>
@@ -212,62 +220,88 @@
     <dialog id="help-modal" class="modal" aria-labelledby="help-title">
       <div class="modal-content">
         <div class="modal-header">
-          <h2 id="help-title">📖 WeirdString Inspectorヘルプ</h2>
-          <button type="button" class="modal-close" title="閉じる" aria-label="閉じる">&times;</button>
+          <h2 id="help-title"><span data-i18n="ui.text71">📖 WeirdString Inspectorヘルプ</span></h2>
+          <button type="button" class="modal-close" title="閉じる" data-i18n-title="ui.attr136" aria-label="閉じる" data-i18n-aria-label="ui.attr137">&times;</button>
         </div>
         <div class="modal-body">
-          <h3>🔍 このツールについて</h3>
-          <p>文字列に紛れた不審なUnicode文字を検出するツールです。判定は文字の種類と前後関係に基づくもので、攻撃の有無を確定するものではありません。</p>
-          <h3>🎯 使い方</h3>
+          <h3 data-i18n="help.actionsTitle">比較と除去、出力</h3>
+          <p data-i18n="help.actions"></p>
+          <p data-i18n="help.privacy"></p>
+          <p data-i18n="help.limits"></p>
+          <h3><span data-i18n="ui.text72">🔍 このツールについて</span></h3>
+          <p><span data-i18n="ui.text73">文字列に紛れた不審なUnicode文字を検出するツールです。判定は文字の種類と前後関係に基づくもので、攻撃の有無を確定するものではありません。</span></p>
+          <h3><span data-i18n="ui.text74">🎯 使い方</span></h3>
           <ol>
-            <li>入力欄に文字列を貼り付ける。</li>
-            <li>判定と、種類ごとの件数を見る。</li>
-            <li>「見た目」と「中身」を比べる。双方向制御があっても「中身」は実際の並び順である。</li>
-            <li>中身のラベルをクリック、またはTabとEnterで選び、理由やコードポイントを読む。</li>
-            <li>隠された内容、語の判定、比較用の文字列、正規化、文字の表で詳細を確認する。</li>
+            <li><span data-i18n="ui.text75">入力欄に文字列を貼り付ける。</span></li>
+            <li><span data-i18n="ui.text76">判定と、種類ごとの件数を見る。</span></li>
+            <li><span data-i18n="ui.text77">「見た目」と「中身」を比べる。双方向制御があっても「中身」は実際の並び順である。</span></li>
+            <li><span data-i18n="ui.text78">中身のラベルをクリック、またはTabとEnterで選び、理由やコードポイントを読む。</span></li>
+            <li><span data-i18n="ui.text79">隠された内容、語の判定、比較用の文字列、正規化、文字の表で詳細を確認する。</span></li>
           </ol>
-          <h3>重大度の3段階</h3>
+          <h3><span data-i18n="ui.text80">重大度の3段階</span></h3>
           <ul>
-            <li>危険：見た目と中身が食い違う文字、または隠された内容</li>
-            <li>注意：気づきにくい文字</li>
-            <li>情報：特殊だが普通の使い方の範囲の文字（例：👨‍💻のZWJ）</li>
+            <li><span data-i18n="ui.text81">危険：見た目と中身が食い違う文字、または隠された内容</span></li>
+            <li><span data-i18n="ui.text82">注意：気づきにくい文字</span></li>
+            <li><span data-i18n="ui.text83">情報：特殊だが普通の使い方の範囲の文字（例：👨‍💻のZWJ）</span></li>
           </ul>
-          <h3>検出する文字の種類</h3>
-          <div class="table-scroll" tabindex="0" role="region" aria-label="検出する文字の種類">
+          <h3><span data-i18n="ui.text84">検出する文字の種類</span></h3>
+          <div class="table-scroll" tabindex="0" role="region" aria-label="検出する文字の種類" data-i18n-aria-label="ui.attr138">
             <table>
-              <thead><tr><th>キー</th><th>種類</th><th>対象</th><th>重大度</th></tr></thead>
+              <thead><tr><th><span data-i18n="ui.text85">キー</span></th><th><span data-i18n="ui.text52">種類</span></th><th><span data-i18n="ui.text86">対象</span></th><th><span data-i18n="ui.text53">重大度</span></th></tr></thead>
               <tbody>
-              <tr><td>tag</td><td>タグ文字</td><td>U+E0000〜E007F。表示されず、ASCIIの文字に1対1で対応するので文を隠せる</td><td>危険（絵文字の旗を作るものは情報）</td></tr>
-              <tr><td>bidi</td><td>双方向制御</td><td>埋め込み・上書き・分離（U+202A〜202E、U+2066〜2069）と、LRM・RLM・ALM</td><td>前者は危険、後者は注意</td></tr>
-              <tr><td>variation</td><td>異体字セレクター</td><td>U+FE00〜FE0F、U+E0100〜E01EFなど</td><td>1個なら情報、2個以上の連続は危険</td></tr>
-              <tr><td>invisible</td><td>不可視文字</td><td>ZWSP・ZWNJ・ZWJ・WJ・BOM・SHY・CGJ・ハングルフィラーなど</td><td>注意。ASCIIの英数字の間なら危険。絵文字のZWJ・先頭のBOMなどは情報</td></tr>
-              <tr><td>control</td><td>制御文字</td><td>C0（TAB・LF・CRLFを除く）・DEL・C1。単独のCRを含む</td><td>注意</td></tr>
-              <tr><td>whitespace</td><td>特殊な空白</td><td>U+0020以外の空白（NBSP・全角スペース・ヘアスペースなど）、U+2028・U+2029、TAB</td><td>注意（TABは情報）</td></tr>
-              <tr><td>private</td><td>私用領域・非文字</td><td>私用領域・非文字・対になっていないサロゲート</td><td>注意</td></tr>
-              <tr><td>zalgo</td><td>積み重ねた結合記号</td><td>結合記号の5個以上の連続、または同じ結合記号の連続（UTS #39）</td><td>注意</td></tr>
-              <tr><td>combining</td><td>結合記号</td><td>上記以外の結合記号（分解形の文など）</td><td>情報</td></tr>
-              <tr><td>compat</td><td>互換文字</td><td>NFKCでASCIIの英数字になる文字（数学用英字・丸数字・全角英数など）</td><td>注意（全角英数は情報）</td></tr>
-              <tr><td>lookalike</td><td>そっくり文字</td><td>confusables.txtでASCIIに見える文字</td><td>混在した語の中・全体がASCIIに見える語・URLの区切りに見える記号は危険、ASCIIの語の中は注意、ほかは情報</td></tr>
-              <tr><td>mixed</td><td>スクリプトの混在</td><td>1つの語の中の、ほかと違うスクリプトの文字</td><td>危険</td></tr>
+              <tr><td>tag</td><td><span data-i18n="ui.text59">タグ文字</span></td><td><span data-i18n="ui.text87">U+E0000〜E007F。表示されず、ASCIIの文字に1対1で対応するので文を隠せる</span></td><td><span data-i18n="ui.text88">危険。既知の推奨旗は情報、未確認の旗の形は注意</span></td></tr>
+              <tr><td>bidi</td><td><span data-i18n="ui.text60">双方向制御</span></td><td><span data-i18n="ui.text89">埋め込み・上書き・分離（U+202A〜202E、U+2066〜2069）と、LRM・RLM・ALM</span></td><td><span data-i18n="ui.text90">前者は危険、後者は注意</span></td></tr>
+              <tr><td>variation</td><td><span data-i18n="ui.text61">異体字セレクター</span></td><td><span data-i18n="ui.text91">U+FE00〜FE0F、U+E0100〜E01EFなど</span></td><td><span data-i18n="ui.text92">対応する単独VSは情報、未確認の組は注意、2個以上の連続は危険</span></td></tr>
+              <tr>
+          <td>invisible</td>
+          <td>
+          <span data-i18n="ui.text62">不可視文字</span>
+          </td>
+          <td>
+          <span data-i18n="ui.text93">ZWSP・ZWNJ・ZWJ・WJ・BOM・SHY・CGJ・ハングルフィラーなど</span>
+          </td>
+          <td>
+          <span data-i18n="ui.text94">注意。ASCIIの英数字の間なら危険。絵文字のZWJ・先頭のBOMなどは情報</span>
+          </td>
+          </tr>
+              <tr><td>control</td><td><span data-i18n="ui.text63">制御文字</span></td><td><span data-i18n="ui.text95">C0（TAB・LF・CRLFを除く）・DEL・C1。単独のCRを含む</span></td><td><span data-i18n="ui.text96">注意</span></td></tr>
+              <tr><td>whitespace</td><td><span data-i18n="ui.text64">特殊な空白</span></td><td><span data-i18n="ui.text97">U+0020以外の空白（NBSP・全角スペース・ヘアスペースなど）、U+2028・U+2029、TAB</span></td><td><span data-i18n="ui.text98">注意（TABは情報）</span></td></tr>
+              <tr><td>private</td><td><span data-i18n="ui.text99">私用領域・非文字</span></td><td><span data-i18n="ui.text100">私用領域・非文字・対になっていないサロゲート</span></td><td><span data-i18n="ui.text96">注意</span></td></tr>
+              <tr><td>zalgo</td><td><span data-i18n="ui.text101">積み重ねた結合記号</span></td><td><span data-i18n="ui.text102">結合記号の5個以上の連続、または同じ結合記号の連続（UTS #39）</span></td><td><span data-i18n="ui.text96">注意</span></td></tr>
+              <tr><td>combining</td><td><span data-i18n="ui.text66">結合記号</span></td><td><span data-i18n="ui.text103">上記以外の結合記号（分解形の文など）</span></td><td><span data-i18n="ui.text104">情報</span></td></tr>
+              <tr><td>compat</td><td><span data-i18n="ui.text67">互換文字</span></td><td><span data-i18n="ui.text105">NFKCでASCIIの英数字になる文字（数学用英字・丸数字・全角英数など）</span></td><td><span data-i18n="ui.text106">注意（全角英数は情報）</span></td></tr>
+              <tr>
+          <td>lookalike</td>
+          <td>
+          <span data-i18n="ui.text68">そっくり文字</span>
+          </td>
+          <td>
+          <span data-i18n="ui.text107">confusables.txtでASCIIに見える文字と、条件を満たす日本語の候補</span>
+          </td>
+          <td>
+          <span data-i18n="ui.text108">混在した語・ASCIIに見える語・URLの区切りは危険。ASCII語中や日本語の限定した文脈は注意、ほかは情報</span>
+          </td>
+          </tr>
+              <tr><td>mixed</td><td><span data-i18n="ui.text109">スクリプトの混在</span></td><td><span data-i18n="ui.text110">1つの語の中の、ほかと違うスクリプトの文字</span></td><td><span data-i18n="ui.text111">危険</span></td></tr>
               </tbody>
             </table>
           </div>
-          <p>普通の日本語や句読点、LF・CRLFは検出しません。ASCIIどうしの紛らわしさ（1・l・I、0・O、rn・m）は対象外です。</p>
-          <h3>入力の読み方</h3>
-          <p>通常は「そのまま読む」を選びます。「エスケープ表記を解釈する」では、<code>\u{202E}</code>や<code>\r</code>などを文字に戻して検査します。</p>
-          <p>入力欄はCRをLFに変えるため、CRを含むサンプルやURLはエスケープ表記で読み込みます。CRがある結果は入力欄へ戻せません。</p>
-          <h3>ほかのツールからの連携</h3>
-          <p><code>?text=</code>と<code>#text=</code>で文字列を渡せます。両方ある場合は#text=を優先します。file://でも使えます。</p>
-          <p>?text=の内容はサーバーへ送られ、ログに残る可能性があります。#text=の内容はサーバーへ送られません。機密情報の扱いに注意してください。</p>
-          <h3>出所と判定の範囲</h3>
-          <p>UTS #39、confusables.txt（Version 18.0.0）、UTS #46に基づきます。ASCIIに見える2,249件、見え方423種類の表を同梱しています。</p>
-          <p>ブラウザーが持つUnicodeの版によって、スクリプトや文字の種類の判定に差が出ることがあります。完全なUnicode名の辞書や双方向表示アルゴリズムは実装していません。</p>
-          <h3>⌨️ キーボード操作</h3>
-          <p>サンプルのタブは←→とHome・Endで選べます。Tabでボタンや文字のラベルに移動し、Enterで操作します。Escでヘルプを閉じます。</p>
-          <h3>🌓 ダークモード</h3>
-          <p>右上の月・太陽ボタンで切り替えます。保存した設定がなければシステム設定に従います。保存を拒否する環境でも使用できます。</p>
-          <h3>🔗 詳細情報</h3>
-          <p><a href="https://github.com/ipusiron/weirdstring-inspector" target="_blank" rel="noopener noreferrer">GitHubリポジトリー</a></p>
+          <p><span data-i18n="ui.text112">普通の日本語や句読点、LF・CRLFは検出しません。ASCIIどうしの紛らわしさ（1・l・I、0・O、rn・m）は対象外です。</span></p>
+          <h3><span data-i18n="ui.text3">入力の読み方</span></h3>
+          <p><span data-i18n="ui.text113">通常は「そのまま読む」を選びます。「エスケープ表記を解釈する」では、</span><code>\u{202E}</code><span data-i18n="ui.text114">や</span><code>\r</code><span data-i18n="ui.text115">などを文字に戻して検査します。</span></p>
+          <p><span data-i18n="ui.text116">入力欄はCRをLFに変えるため、CRを含むサンプルやURLはエスケープ表記で読み込みます。CRがある結果は入力欄へ戻せません。</span></p>
+          <h3><span data-i18n="ui.text117">ほかのツールからの連携</span></h3>
+          <p><code>?text=</code><span data-i18n="ui.text118">と</span><code>#text=</code><span data-i18n="ui.text119">で文字列を渡せます。両方ある場合は#text=を優先します。file://でも使えます。</span></p>
+          <p><span data-i18n="ui.text120">?text=の内容はサーバーへ送られ、ログに残る可能性があります。#text=の内容はサーバーへ送られません。機密情報の扱いに注意してください。</span></p>
+          <h3><span data-i18n="ui.text121">出所と判定の範囲</span></h3>
+          <p><span data-i18n="ui.text122">UTS #39、confusables.txt（Version 18.0.0）、UTS #46に基づきます。ASCIIに見える2,249件、見え方423種類の表を同梱しています。</span></p>
+          <p><span data-i18n="ui.text123">ブラウザーが持つUnicodeの版によって、スクリプトや文字の種類の判定に差が出ることがあります。完全なUnicode名の辞書や双方向表示アルゴリズムは実装していません。</span></p>
+          <h3><span data-i18n="ui.text124">⌨️ キーボード操作</span></h3>
+          <p><span data-i18n="ui.text125">サンプルのタブは←→とHome・Endで選べます。Tabでボタンや文字のラベルに移動し、Enterで操作します。Escでヘルプを閉じます。</span></p>
+          <h3><span data-i18n="ui.text126">🌓 ダークモード</span></h3>
+          <p><span data-i18n="ui.text127">右上の月・太陽ボタンで切り替えます。保存した設定がなければシステム設定に従います。保存を拒否する環境でも使用できます。</span></p>
+          <h3><span data-i18n="ui.text128">🔗 詳細情報</span></h3>
+          <p><a href="https://github.com/ipusiron/weirdstring-inspector" target="_blank" rel="noopener noreferrer"><span data-i18n="ui.text129">GitHubリポジトリー</span></a></p>
 
         </div>
       </div>

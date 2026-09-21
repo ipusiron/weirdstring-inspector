@@ -61,16 +61,23 @@ function parseUrlParameters() {
     invalidateActions();
     renderAnalysis();
   } else setSampleText(incoming.text);
+  sourceState = incoming;
+  renderSource();
+}
+
+function renderSource() {
   const info = document.getElementById('source-info');
-  info.hidden = incoming.source === null;
-  const key = incoming.source === 'clipthreat-studio' ? 'source.clipthreat' :
-    incoming.source === 'qr-risk-radar' ? 'source.qr' : 'source.other';
-  info.textContent = incoming.source === null ? '' : t(key) +
-    (incoming.attackType ? t('source.attack', { attackType: L.escapeForInput(incoming.attackType) }) : '');
+  info.hidden = !sourceState?.source;
+  if (info.hidden) { info.textContent = ''; return; }
+  const key = sourceState.source === 'clipthreat-studio' ? 'source.clipthreat' :
+    sourceState.source === 'qr-risk-radar' ? 'source.qr' : 'source.other';
+  info.textContent = t(key) + (sourceState.attackType ?
+    t('source.attack', { attackType: L.escapeForInput(sourceState.attackType) }) : '');
 }
 
 // ページ読み込み時にテーマを初期化
 document.addEventListener('DOMContentLoaded', () => {
+  initLanguage();
   initTheme();
   
   // テーマ切替ボタンのイベントリスナー
@@ -129,7 +136,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- 辞書とDOMの共通処理 ---
 const L = WeirdStringLogic;
 const A = WeirdStringActions;
-const t = (key, params) => WeirdStringMessages.format('ja', key, params);
+let currentLanguage = 'ja';
+const t = (key, params) => WeirdStringMessages.format(currentLanguage, key, params);
 let analysisTimer = null;
 let currentResult = null;
 let revision = 0;
@@ -138,7 +146,69 @@ let comparisonState = null;
 let fileRequest = 0;
 let reportState = null;
 let shareState = null;
+let selectedCharacter = null;
+let sampleCategory = 'tag';
+let sourceState = null;
 const notices = new Map();
+
+function initLanguage() {
+  let saved;
+  try { saved = localStorage.getItem('language'); } catch { /* Storage is optional. */ }
+  const preferred = (navigator.languages || [navigator.language]).map(lang => lang.split('-')[0].toLowerCase());
+  currentLanguage = ['ja', 'en'].includes(saved) ? saved : preferred.find(lang => ['ja', 'en'].includes(lang)) || 'en';
+  document.getElementById('language-select').value = currentLanguage;
+  applyTranslations();
+  document.getElementById('language-select').addEventListener('change', event => {
+    currentLanguage = event.target.value === 'ja' ? 'ja' : 'en';
+    try { localStorage.setItem('language', currentLanguage); } catch { /* Storage is optional. */ }
+    refreshLanguage();
+  });
+}
+
+function applyTranslations() {
+  document.documentElement.lang = currentLanguage;
+  for (const node of document.querySelectorAll('[data-i18n]')) node.textContent = t(node.dataset.i18n);
+  for (const attr of ['title', 'aria-label', 'placeholder']) {
+    for (const node of document.querySelectorAll('[data-i18n-' + attr + ']')) {
+      node.setAttribute(attr, t(node.getAttribute('data-i18n-' + attr)));
+    }
+  }
+}
+
+function refreshLanguage() {
+  const focus = document.activeElement;
+  const focusSelector = focus.matches('.chip') ? '.chip[data-index="' + focus.dataset.index + '"]' :
+    focus.matches('#removal-candidates input') ? '#removal-candidates input[data-index="' + focus.dataset.index + '"]' :
+      focus.dataset.sampleId ? '[data-sample-id="' + focus.dataset.sampleId + '"]' : null;
+  const previousNotices = new Map(notices);
+  const position = { x: scrollX, y: scrollY };
+  const selection = [focus.selectionStart, focus.selectionEnd, focus.selectionDirection];
+  const detail = selectedCharacter;
+  applyTranslations();
+  updateThemeIcon(document.documentElement.getAttribute('data-theme'));
+  renderAnalysis({ reuse: true });
+  selectedCharacter = detail;
+  if (selectedCharacter !== null && currentResult.chars[selectedCharacter]?.category) {
+    showCharDetail(currentResult.chars[selectedCharacter]);
+    document.querySelector('.chip[data-index="' + selectedCharacter + '"]')?.setAttribute('aria-pressed', 'true');
+  }
+  switchSampleCategory(sampleCategory);
+  if (removalState) { renderRemovalCandidates(); renderRemovalPreview(); }
+  if (comparisonState) renderComparison();
+  if (reportState) { reportState.report.language = currentLanguage; renderReport(); }
+  renderSource();
+  for (const [id, message] of previousNotices) {
+    if (id !== 'report-status' || message.key !== 'report.ready') notices.set(id, message);
+  }
+  for (const [id, message] of notices) document.getElementById(id).textContent = message.key ? t(message.key, message.params) : '';
+  let restored = focus;
+  if (!focus.isConnected) {
+    if (focusSelector) restored = document.querySelector(focusSelector);
+  }
+  restored?.focus({ preventScroll: true });
+  if (selection[0] !== null && typeof restored?.setSelectionRange === 'function') restored.setSelectionRange(...selection);
+  scrollTo(position.x, position.y);
+}
 
 function setNotice(id, key, params = {}) {
   notices.set(id, { key, params });
@@ -147,6 +217,7 @@ function setNotice(id, key, params = {}) {
 
 function invalidateActions() {
   revision++;
+  selectedCharacter = null;
   removalState = null;
   comparisonState = null;
   invalidateReport();
@@ -158,8 +229,8 @@ function invalidateActions() {
   document.getElementById('removal-candidates').replaceChildren();
   document.getElementById('removal-preview').value = '';
   document.getElementById('removal-escaped').textContent = '';
-  document.getElementById('removal-result').textContent = t('actions.stale');
-  document.getElementById('comparison-result').textContent = t('actions.stale');
+  setNotice('removal-result', 'actions.stale');
+  setNotice('comparison-result', 'actions.stale');
 }
 
 function element(tag, text, className) {
@@ -213,6 +284,7 @@ function initSampleTabs() {
 }
 
 function switchSampleCategory(category) {
+  sampleCategory = category;
   const tabs = document.querySelectorAll('.tab-button');
   tabs.forEach(button => {
     const selected = button.dataset.category === category;
@@ -226,11 +298,12 @@ function switchSampleCategory(category) {
   for (const sample of sampleData[category] || []) {
     const box = element('div', undefined, 'sample-box');
     const heading = element('p');
-    heading.append(element('strong', sample.name));
+    heading.append(element('strong', t(sample.nameKey)));
     const button = element('button', t('sample.load'));
     button.type = 'button';
+    button.dataset.sampleId = sample.id;
     button.addEventListener('click', () => setSampleText(sample.text));
-    box.append(heading, element('p', sample.description), button);
+    box.append(heading, element('p', t(sample.descriptionKey)), button);
     area.append(box);
   }
 }
@@ -271,7 +344,7 @@ function initInput() {
   document.getElementById('to-plain').addEventListener('click', () => {
     const decoded = interpretedInput();
     if (L.needsEscapeMode(decoded.text)) {
-      document.getElementById('input-message').textContent = t('input.cr');
+      setNotice('input-message', 'input.cr');
       return;
     }
     document.getElementById('inputText').value = decoded.text;
@@ -286,10 +359,16 @@ function initInput() {
 }
 
 // --- 判定・内訳と論理順の表示 ---
-function renderAnalysis() {
+function renderAnalysis(options = {}) {
+  const reuse = options.reuse === true && currentResult !== null && analysisTimer === null;
   clearTimeout(analysisTimer);
+  analysisTimer = null;
   const decoded = interpretedInput();
-  currentResult = L.analyze(decoded.text);
+  if (!reuse) {
+    currentResult = L.analyze(decoded.text);
+    notices.delete('input-message');
+    setNotice('status', null);
+  }
   const result = currentResult;
   const escape = document.getElementById('mode-escape').checked;
   document.getElementById('to-escape').disabled = escape;
@@ -316,7 +395,6 @@ function renderAnalysis() {
   renderLogical(result);
   document.getElementById('char-detail').textContent = t('detail.initial');
   renderPanels(result);
-  document.getElementById('status').textContent = '';
 }
 
 function renderLogical(result) {
@@ -363,6 +441,7 @@ function initDetails() {
     if (!chip) return;
     for (const button of document.querySelectorAll('.chip')) button.setAttribute('aria-pressed', String(button === chip));
     showCharDetail(currentResult.chars[Number(chip.dataset.index)]);
+    selectedCharacter = Number(chip.dataset.index);
   });
   document.getElementById('table-all').addEventListener('change', () => renderTable(currentResult));
   document.getElementById('copy-comparable').addEventListener('click', () => copyText(currentResult.comparable));
@@ -430,7 +509,7 @@ function renderPanels(result) {
   const list = document.getElementById('token-list');
   list.replaceChildren();
   for (const token of tokens) list.append(element('li', t('token.item', {
-    text: token.text, comparable: token.comparable, scripts: token.scripts.map(scriptName).join(t('token.separator')),
+    text: L.escapeForInput(token.text), comparable: L.escapeForInput(token.comparable), scripts: token.scripts.map(scriptName).join(t('token.separator')),
     level: t(token.wholeScriptConfusable ? 'level.wholeScript' : 'level.mixed')
   })));
   document.getElementById('comparable-panel').hidden = result.verdict === 'clean' || !result.comparableDiffers;
@@ -510,7 +589,7 @@ function prepareRemoval() {
   renderAnalysis();
   const decoded = interpretedInput();
   if (decoded.errors.length || currentResult.truncated) {
-    document.getElementById('removal-result').textContent = t('actions.incomplete');
+    setNotice('removal-result', 'actions.incomplete');
     return;
   }
   const plan = A.buildRemovalPlan(currentResult);
@@ -537,6 +616,7 @@ function renderRemovalCandidates() {
 }
 
 function renderRemovalPreview() {
+  notices.delete('removal-result');
   const preview = A.removeSelected(removalState.text, removalState.selected);
   removalState.preview = preview;
   const result = L.analyze(preview.text);
@@ -549,6 +629,7 @@ function renderRemovalPreview() {
 }
 
 function renderComparison() {
+  notices.delete('comparison-result');
   const container = document.getElementById('comparison-result');
   container.replaceChildren();
   if (comparisonState.status !== 'complete') {
@@ -653,7 +734,7 @@ function prepareReport() {
     setNotice('report-status', 'actions.incomplete');
     return;
   }
-  const report = A.buildReport(currentResult, { details: document.getElementById('report-details').checked, language: 'ja' });
+  const report = A.buildReport(currentResult, { details: document.getElementById('report-details').checked, language: currentLanguage });
   reportState = { revision, report };
   renderReport();
 }

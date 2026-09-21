@@ -34,9 +34,9 @@ test('README numbers and block-form metadata retain their meaning', () => {
   assert.equal(D.count, 2249);
   assert.equal(D.unicodeVersion, '18.0.0');
   assert.equal(Object.keys(D.asciiLookalike).length, 423);
-  assert.equal(Object.values(samples).flat().length, 41);
+  assert.equal(Object.values(samples).flat().length, 47);
   assert.equal(L.MAX_CODE_POINTS, 100000);
-  for (const text of ['2,249件', '423種類', 'Version 18.0.0', '41件', '100,000文字']) assert.ok(md.includes(text), text);
+  for (const text of ['2,249件', '423種類', 'Version 18.0.0', '47件', '100,000文字']) assert.ok(md.includes(text), text);
   const meta = md.match(/^<!--\r?\n---\r?\n([\s\S]*?)\r?\n---\r?\n-->/);
   assert.ok(meta);
   for (const key of ['category_ja', 'category_en', 'tags']) assert.match(meta[1], new RegExp(key + ':\\r?\\n  - '));
