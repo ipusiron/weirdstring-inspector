@@ -6,8 +6,12 @@ const L = require('../weirdstring-logic.js');
 const M = require('../weirdstring-messages.js');
 const D = require('../weirdstring-data.js');
 const samples = require('../samples.js');
+const A = require('../weirdstring-actions.js');
+const C = require('../weirdstring-context-data.js');
+const crypto = require('node:crypto');
 const root = path.join(__dirname, '..');
 const md = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
+const en = fs.readFileSync(path.join(root, 'README.en.md'), 'utf8');
 const section = heading => md.split(heading + '\n')[1].split('\n## ')[0];
 const rows = text => text.split(/\r?\n/).filter(line => line.startsWith('| ')).slice(1)
   .map(line => line.slice(1, -1).split('|').map(cell => cell.trim()));
@@ -51,11 +55,62 @@ test('README numbers and block-form metadata retain their meaning', () => {
   assert.doesNotMatch(md, /debugCharCodes|HTTPサーバー上での動作が必要|ツールチップ|Confused Scripts|ディレクトリ構成/);
 });
 test('all referenced images exist and all assets PNGs are referenced', () => {
-  const images = Array.from(md.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g), m => m[1]).filter(url => !/^https?:/.test(url));
-  assert.equal(images.length, 4);
+  const localImages = text => Array.from(text.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g), m => m[1]).filter(url => !/^https?:/.test(url));
+  assert.equal(localImages(md).length, 3);
+  assert.equal(localImages(en).length, 2);
+  assert.deepEqual(localImages(en), ['assets/screenshot4.png', 'assets/screenshot5.png']);
+  const images = [...localImages(md), ...localImages(en)];
+  assert.equal(images.length, 5);
   for (const file of images) assert.ok(fs.existsSync(path.join(root, file)), file);
   const pngs = fs.readdirSync(path.join(root, 'assets')).filter(name => name.endsWith('.png')).map(name => 'assets/' + name);
   assert.deepEqual([...images].sort(), pngs.sort());
+});
+
+test('both README comparison tables reproduce all 55 independent flags', () => {
+  const flags = ['exactEqual', 'nfcEqual', 'nfkcEqual', 'comparableEqual', 'japanesePairEqual'];
+  const parsed = [md, en].map(text => {
+    const table = text.match(/\| A \| B \|[^\n]+\n([\s\S]*?)(?=\r?\n\r?\n)/)[0];
+    const entries = rows(table);
+    assert.equal(entries.length, 11);
+    for (const [a, b, ...expected] of entries) {
+      const left = L.decodeEscapes(uncode(a));
+      const right = L.decodeEscapes(uncode(b));
+      assert.deepEqual(left.errors, []);
+      assert.deepEqual(right.errors, []);
+      const result = A.compareTexts(left.text, right.text);
+      assert.equal(result.status, 'complete');
+      assert.deepEqual(flags.map(key => result[key] ? '✓' : '—'), expected);
+    }
+    return entries;
+  });
+  assert.deepEqual(parsed[0], parsed[1]);
+});
+
+test('phase 2 documentation states shared limits and preserves the exact original metadata', () => {
+  assert.equal(C.rgiFlags.length, 3);
+  assert.equal(C.variants.length, 2179);
+  assert.equal(C.japanesePairs.length, 16);
+  assert.equal(A.MAX_FILE_BYTES, 1048576);
+  assert.equal(A.MAX_REPORT_BYTES, 5242880);
+  assert.equal(A.MAX_SHARE_LENGTH, 8000);
+  for (const doc of [md, en]) {
+    for (const number of ['2,249', '423', '2,179', '100,000', '5,000', '1,000', '1MiB', '5MiB', '8,000']) {
+      assert.ok(doc.includes(number), number);
+    }
+    assert.ok(doc.includes('#v=2&mode=escape&text='));
+    assert.ok(doc.includes('node tools/build-context-data.js --check'));
+  }
+  assert.ok(md.includes('[English](README.en.md)'));
+  assert.ok(en.includes('[日本語](README.md)'));
+  assert.doesNotMatch(en, /id: day023|hub: true|^<!--/);
+  const meta = md.match(/^<!--[\s\S]*?-->/)[0].replace(/\r\n/g, '\n');
+  assert.equal(crypto.createHash('sha256').update(meta).digest('hex'),
+    '788d37c72e8f5f420014976a2f427b9ec207bbb78127e558d31c14b01154d986');
+  const guide = fs.readFileSync(path.join(root, 'CLAUDE.md'), 'utf8');
+  for (const file of ['weirdstring-actions.js', 'weirdstring-context-data.js', 'samples.en.md', 'README.en.md']) {
+    assert.ok(guide.includes(file), file);
+  }
+  assert.doesNotMatch(guide, /41 educational|do not add English UI|All text is in Japanese/);
 });
 test('documented directory tree contains every path with aligned explanations', () => {
   const tree = section('## 📁 ディレクトリー構造').match(/\x60{3}text\n([^]*?)\n\x60{3}/)[1].split('\n');

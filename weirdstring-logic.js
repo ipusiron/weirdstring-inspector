@@ -185,7 +185,7 @@
       hidden.push({ kind: 'variation', start: run[0].index, end: run.at(-1).index, count: run.length,
         text, bytes: bytes.map(byte => hex(byte, 2)).join(' ') });
     }
-    const isBase = char => char && !/[\s\p{C}\p{M}\p{Default_Ignorable_Code_Point}]/u.test(char.ch);
+    const isBase = char => char && !/[\s\p{Cc}\p{Cf}\p{M}\p{Default_Ignorable_Code_Point}]/u.test(char.ch);
     let distributed = [];
     const flush = () => {
       if (distributed.length > 1) {

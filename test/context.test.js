@@ -58,4 +58,11 @@ test('distributed decoding is an adjacent, unexpected VS candidate, never a whol
   assert.equal(L.analyze('\u{1F600}\u{E01EF}\u{1F601}\u{E01EE}').hidden[0].text, null);
   assert.equal(L.analyze('\u{1F600}\ufe00\u{1F601}\ufe01').hidden[0].text, null);
   assert.equal(L.analyze('a\u180bb\u180c').hidden.length, 0);
+  // Private-use and unassigned bases are not controls; the candidate does not certify a glyph.
+  for (const base of ['\ue000', '\u0378']) {
+    assert.equal(L.analyze(base + '\u{E0158}' + base + '\u{E0159}').hidden[0].text, 'hi');
+  }
+  for (const base of ['\0', '\u0600']) {
+    assert.equal(L.analyze(base + '\u{E0158}' + base + '\u{E0159}').hidden.length, 0);
+  }
 });
