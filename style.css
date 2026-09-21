@@ -83,8 +83,9 @@ h1, h2, h3 {
 
 /* === テキスト入力欄 === */
 textarea {
+  box-sizing: border-box;
   width: 100%;
-  font-size: 1em;
+  font-size: 16px;
   padding: 0.5em;
   margin-top: 0.5em;
   margin-bottom: 1em;
@@ -139,7 +140,7 @@ button:hover {
 }
 
 /* === 結果表示領域 === */
-#resultArea {
+.text-view {
   margin-top: 1em;
   padding: 0.8em;
   border: 1px solid var(--box-border);
@@ -147,8 +148,48 @@ button:hover {
   background-color: var(--box-bg);
   font-family: monospace;
   white-space: pre-wrap;
-  word-wrap: break-word;
+  overflow-wrap: anywhere;
   transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+#view-logical {
+  direction: ltr;
+  unicode-bidi: bidi-override;
+}
+
+.chip {
+  min-height: 24px;
+  padding: 0.1em 0.4em;
+  margin: 0.1em;
+  vertical-align: baseline;
+  font: inherit;
+  color: var(--text-color);
+  background-color: var(--tab-bg);
+  border: 1px dashed currentColor;
+}
+
+.chip[data-severity="danger"] {
+  border: 2px solid currentColor;
+}
+
+.chip[data-severity="caution"] {
+  border: 1px solid currentColor;
+}
+
+.source-info, #verdict {
+  padding: 0.75em;
+  border: 1px solid var(--box-border);
+  border-radius: 5px;
+  background-color: var(--box-bg);
+}
+
+#input-message:empty, #view-limit:empty {
+  display: none;
+}
+
+fieldset label {
+  display: inline-block;
+  margin-right: 1em;
 }
 
 #summaryList {

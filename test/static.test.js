@@ -157,3 +157,9 @@ test('dependency-free npm test and Node 22 CI for push and pull_request', () => 
   assert.ok(!read('.gitignore').includes('.github/workflows'));
 });
 
+test('UI dictionary keys exist', () => {
+  const keys = Array.from(read('script.js').matchAll(/\bt\(['"]([^'"]+)['"]/g), match => match[1]);
+  const literalKeys = keys.filter(key => !key.endsWith('.'));
+  assert.ok(literalKeys.length > 0);
+  for (const key of literalKeys) assert.ok(Object.hasOwn(M.ja, key), key);
+});

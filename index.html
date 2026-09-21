@@ -25,19 +25,43 @@
           怪しい文字列を入力すると、異常なUnicode文字（ゼロ幅スペース、Zalgo、そっくり文字など）を検出してハイライト表示します。
         </p>
 
+        <p id="source-info" class="source-info" hidden></p>
+        <label for="inputText">検査する文字列</label>
         <textarea
           id="inputText"
           rows="5"
           cols="80"
           placeholder="ここに文字列を入力してください…"
-          oninput="analyzeInput()"
+          maxlength="200000"
+          spellcheck="false"
+          autocapitalize="off"
+          autocomplete="off"
         ></textarea>
 
+        <fieldset>
+          <legend>入力の読み方</legend>
+          <label><input type="radio" name="input-mode" id="mode-plain" value="plain" checked>そのまま読む</label>
+          <label><input type="radio" name="input-mode" id="mode-escape" value="escape">エスケープ表記を解釈する（\u{202E}・\rなど）</label>
+        </fieldset>
+        <div class="input-actions">
+          <button type="button" id="to-escape">エスケープ表記に直す</button>
+          <button type="button" id="to-plain" disabled>解釈した結果を入力欄へ戻す</button>
+          <button type="button" id="clear-input">クリア</button>
+        </div>
+        <p id="input-stats"></p>
+        <p id="input-message" role="status"></p>
+
         <h2>🔍 検出結果</h2>
-        <div id="resultArea"></div>
+        <p id="verdict" role="status" data-verdict="empty"></p>
 
         <h3>📊 検出された異常の内訳</h3>
-        <ul id="summaryList"></ul>
+        <ul id="summaryList" aria-live="polite"></ul>
+        <h3>見た目（ブラウザーがそのまま描いたもの）</h3>
+        <div id="view-rendered" class="text-view"></div>
+        <h3>中身（実際の並び。見えない文字はラベルで表示）</h3>
+        <div id="view-logical" class="text-view"></div>
+        <p id="view-limit"></p>
+        <div id="char-detail" aria-live="polite"></div>
       </section>
 
       <!-- サブ領域（サンプル学習用） -->
@@ -183,6 +207,9 @@
       </div>
     </div>
 
+    <script src="weirdstring-data.js"></script>
+    <script src="weirdstring-messages.js"></script>
+    <script src="weirdstring-logic.js"></script>
     <script src="samples.js"></script>
     <script src="script.js"></script>
   </body>

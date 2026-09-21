@@ -1,6 +1,10 @@
 // --- ダークモード切替機能 ---
 function initTheme() {
-  const savedTheme = localStorage.getItem('theme') || 'light';
+  let savedTheme = 'light';
+  try {
+    const stored = localStorage.getItem('theme');
+    if (stored === 'light' || stored === 'dark') savedTheme = stored;
+  } catch { /* Storage is optional. */ }
   document.documentElement.setAttribute('data-theme', savedTheme);
   updateThemeIcon(savedTheme);
 }
@@ -10,7 +14,7 @@ function toggleTheme() {
   const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
   
   document.documentElement.setAttribute('data-theme', newTheme);
-  localStorage.setItem('theme', newTheme);
+  try { localStorage.setItem('theme', newTheme); } catch { /* Storage is optional. */ }
   updateThemeIcon(newTheme);
 }
 
@@ -47,56 +51,15 @@ function handleModalEsc(e) {
 
 // --- URLパラメータ解析 ---
 function parseUrlParameters() {
-  const params = new URLSearchParams(window.location.search);
-  const text = params.get('text');
-  const source = params.get('source');
-  const attackType = params.get('attack_type');
-  
-  if (text) {
-    try {
-      // URLデコード
-      const decodedText = decodeURIComponent(text);
-      
-      // 入力欄にセット
-      const input = document.getElementById('inputText');
-      if (input) {
-        input.value = decodedText;
-        // 自動解析実行
-        analyzeInput();
-      }
-      
-      // ClipThreat Studioからの呼び出しの場合、表示を追加
-      if (source === 'clipthreat-studio') {
-        showExternalSourceInfo(source, attackType);
-      }
-    } catch (error) {
-      console.error('URL parameter decode error:', error);
-    }
-  }
-}
-
-// --- 外部ツール連携表示 ---
-function showExternalSourceInfo(source, attackType) {
-  const resultArea = document.getElementById('resultArea');
-  if (resultArea && source === 'clipthreat-studio') {
-    const infoDiv = document.createElement('div');
-    infoDiv.style.cssText = `
-      background-color: var(--highlight-punctuation);
-      border: 1px solid var(--box-border);
-      border-radius: 5px;
-      padding: 0.8em;
-      margin-bottom: 1em;
-      font-size: 0.9em;
-    `;
-    
-    let infoText = '🔗 ClipThreat Studio から解析対象が渡されました';
-    if (attackType) {
-      infoText += `（攻撃タイプ: ${attackType}）`;
-    }
-    
-    infoDiv.textContent = infoText;
-    resultArea.parentNode.insertBefore(infoDiv, resultArea);
-  }
+  const incoming = WeirdStringLogic.parseLocation(location.search, location.hash);
+  if (incoming.text === null) return;
+  setSampleText(incoming.text);
+  const info = document.getElementById('source-info');
+  info.hidden = incoming.source === null;
+  const key = incoming.source === 'clipthreat-studio' ? 'source.clipthreat' :
+    incoming.source === 'qr-risk-radar' ? 'source.qr' : 'source.other';
+  info.textContent = incoming.source === null ? '' : t(key) +
+    (incoming.attackType ? t('source.attack', { attackType: incoming.attackType }) : '');
 }
 
 // ページ読み込み時にテーマを初期化
@@ -131,247 +94,173 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-  // URLパラメータ処理
-  parseUrlParameters();
+  // 入力の経路を初期化
+  initInput();
   
   // サンプルカテゴリ初期化
   switchSampleCategory('invisible');
 });
 
-// --- 異常文字コードポイント定義 ---
+// --- 辞書とDOMの共通処理 ---
+const L = WeirdStringLogic;
+const t = (key, params) => WeirdStringMessages.format('ja', key, params);
+let analysisTimer = null;
+let currentResult = null;
 
-const invisibleCodePoints = new Set([
-  0x00a0, // ← ノンブレークスペースを追加
-  0x200b,
-  0x200c,
-  0x200d,
-  0x2060,
-  0xfeff,
-]);
-
-const lookalikeCodePoints = new Set([
-  // キリル文字
-  0x0430, 0x0435, 0x043e, 0x0440, 0x0441, 0x0455, 0x0491,
-  // ギリシャ文字
-  0x03b1, 0x03bf, 0x03c1, 0x03c3, 0x03c5, 0x03c7, 0x03d5,
-  // フル幅ラテン
-  0xff41, 0xff4c, 0xff4f,
-]);
-
-// 数学用アルファベット U+1D400〜U+1D7FF を追加
-function addRangeToSet(set, start, end) {
-  for (let i = start; i <= end; i++) {
-    set.add(i);
-  }
-}
-addRangeToSet(lookalikeCodePoints, 0x1d400, 0x1d7ff);
-
-const controlCodePoints = new Set([
-  ...Array.from({ length: 32 }, (_, i) => i),
-  0x007f,
-  0x202e,
-]);
-
-const zalgoCodePoints = new Set([
-  ...rangeSet(0x0300, 0x036f),
-  ...rangeSet(0x0483, 0x0489),
-  ...rangeSet(0x0591, 0x05bd),
-  0x05bf,
-  ...rangeSet(0x05c1, 0x05c2),
-]);
-
-function rangeSet(start, end) {
-  const set = [];
-  for (let i = start; i <= end; i++) {
-    set.push(i);
-  }
-  return set;
+function element(tag, text, className) {
+  const node = document.createElement(tag);
+  if (text !== undefined) node.textContent = text;
+  if (className) node.className = className;
+  return node;
 }
 
-const bidirectionalCodePoints = new Set([
-  0x202a,
-  0x202b,
-  0x202c,
-  0x202d,
-  0x202e, // LRE～RLO、PDF
-  0x2066,
-  0x2067,
-  0x2068,
-  0x2069, // LRI～PDI
-]);
+function charName(char) {
+  const hex = char.cp.toString(16).toUpperCase().padStart(4, '0');
+  const key = 'charName.' + hex;
+  if (Object.hasOwn(WeirdStringMessages.ja, key)) return t(key);
+  const abbr = L.abbrOf(char.cp);
+  if (abbr?.startsWith('VS')) return t('charName.vs', { n: abbr.slice(2) });
+  if (abbr === 'TAG:SP') return t('charName.tagSpace');
+  if (abbr?.startsWith('TAG:')) return t('charName.tag', { ascii: abbr.slice(4) });
+  return char.category ? t('category.' + char.category) : t('char.ordinary');
+}
 
-const punctuationCodePoints = new Set([
-  0xff0e, // 全角ピリオド
-  0xff02, // 全角ダブルクォート
-  0x201e,
-  0x201c, // ダブルクォート風記号
-  0x02d9, // 上付き点（見た目はドット）
-]);
+function charLabel(char) {
+  if (['tag', 'bidi', 'variation', 'invisible', 'control', 'whitespace', 'private'].includes(char.category)) {
+    return L.abbrOf(char.cp) || L.describeCodePoint(char.cp).codePoint;
+  }
+  if (['zalgo', 'combining'].includes(char.category)) return t('char.combining', { char: char.ch });
+  if (['compat', 'lookalike'].includes(char.category) && char.ascii !== null) {
+    return t('char.mapping', { char: char.ch, ascii: char.ascii });
+  }
+  if (char.newline) return char.cp === 10 ? t('char.lf') : t('char.cr');
+  return char.ch;
+}
 
-const emojiCodePoints = new Set([
-  0x200d, // ゼロ幅結合子
-]);
-
-const whitespaceCodePoints = new Set([
-  0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x2008,
-  0x2009, 0x200a, 0x205f,
-]);
-
-const confusedCodePoints = new Set([
-  0x0627,
-  0x0631, // アラビア文字：ا،ر
-  0x0905, // デーヴァナーガリー：अ
-  0x3042,
-  0x30a2, // ひらがな/カタカナ：あ、ア
-]);
-
-// --- カテゴリ設定 ---
-const categories = {
-  invisible: {
-    label: 'Invisible（見えない文字）',
-    color: '#ff8888',
-    codePoints: invisibleCodePoints,
-  },
-  lookalike: {
-    label: 'Look-alike（そっくり文字）',
-    color: '#88bbff',
-    codePoints: lookalikeCodePoints,
-  },
-  control: {
-    label: 'Control（制御文字）',
-    color: '#ffaa00',
-    codePoints: controlCodePoints,
-  },
-  zalgo: {
-    label: 'Zalgo（結合記号）',
-    color: '#cc88ff',
-    codePoints: zalgoCodePoints,
-  },
-  bidirectional: {
-    label: 'Bidirectional（双方向制御）',
-    color: '#ffddee',
-    codePoints: bidirectionalCodePoints,
-  },
-  punctuation: {
-    label: 'Punctuation（紛らわしい記号）',
-    color: '#e6ffe6',
-    codePoints: punctuationCodePoints,
-  },
-  emoji: {
-    label: 'Emoji ZWJ',
-    color: '#fff0cc',
-    codePoints: emojiCodePoints,
-  },
-  whitespace: {
-    label: 'Whitespace（空白偽装）',
-    color: '#ddeeff',
-    codePoints: whitespaceCodePoints,
-  },
-  confused: {
-    label: 'Confused Scripts',
-    color: '#f0e6ff',
-    codePoints: confusedCodePoints,
-  },
-};
-
-// --- サンプル切替 ---
+// --- サンプル切替（データとタブは段階4で更新） ---
 function switchSampleCategory(category) {
   const tabs = document.querySelectorAll('.tab-button');
-  tabs.forEach((btn) => btn.classList.remove('active'));
-  const activeTab = Array.from(tabs).find((btn) =>
-    btn.textContent.toLowerCase().includes(category)
-  );
+  tabs.forEach(btn => btn.classList.remove('active'));
+  const activeTab = Array.from(tabs).find(btn => btn.textContent.toLowerCase().includes(category));
   if (activeTab) activeTab.classList.add('active');
-
   const area = document.getElementById('sampleListArea');
-  area.innerHTML = '';
-
-  const samples = sampleData[category] || [];
-  samples.forEach((sample) => {
-    const box = document.createElement('div');
-    box.className = 'sample-box';
-    box.innerHTML = `
-      <p><strong>${sample.name}</strong></p>
-      <p>${sample.description}</p>
-      <button onclick="setSampleText(\`${sample.text}\`)">この文字列をセット</button>
-      <hr>
-    `;
-    area.appendChild(box);
-  });
+  area.replaceChildren();
+  for (const sample of sampleData[category] || []) {
+    const box = element('div', undefined, 'sample-box');
+    const heading = element('p');
+    heading.append(element('strong', sample.name));
+    const button = element('button', t('sample.load'));
+    button.type = 'button';
+    button.addEventListener('click', () => setSampleText(sample.text));
+    box.append(heading, element('p', sample.description), button);
+    area.append(box);
+  }
 }
 
-// --- サンプル適用 ---
+// --- プログラムからの入力はこの経路に集める ---
 function setSampleText(text) {
-  const input = document.getElementById('inputText');
-  input.value = text;
-  analyzeInput();
+  const escape = L.needsEscapeMode(text);
+  document.getElementById('mode-escape').checked = escape;
+  document.getElementById('mode-plain').checked = !escape;
+  document.getElementById('inputText').value = escape ? L.escapeForInput(text) : text;
+  renderAnalysis();
 }
 
-// --- HTMLエスケープ関数（XSS対策） ---
-function escapeHtml(text) {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+function interpretedInput() {
+  const value = document.getElementById('inputText').value;
+  return document.getElementById('mode-escape').checked ? L.decodeEscapes(value) : { text: value, errors: [] };
 }
 
-// --- メイン解析ロジック ---
-function analyzeInput() {
-  const input = document.getElementById('inputText').value;
-  debugCharCodes(input);
-
-  const result = document.getElementById('resultArea');
-  const summary = document.getElementById('summaryList');
-  result.innerHTML = '';
-  summary.innerHTML = '';
-
-  const counts = {
-    invisible: 0,
-    lookalike: 0,
-    control: 0,
-    zalgo: 0,
-  };
-
-  const chars = [...input];
-  const highlighted = chars.map((ch) => {
-    const code = ch.codePointAt(0);
-    for (let key in categories) {
-      if (categories[key].codePoints.has(code)) {
-        counts[key]++;
-        return `<span class="highlight ${key}" title="U+${code
-          .toString(16)
-          .toUpperCase()
-          .padStart(4, '0')}">${escapeHtml(ch)}</span>`;
-      }
-    }
-    return escapeHtml(ch);
+function initInput() {
+  document.getElementById('inputText').addEventListener('input', () => {
+    clearTimeout(analysisTimer);
+    if (document.getElementById('inputText').value.length > 20000) analysisTimer = setTimeout(renderAnalysis, 200);
+    else renderAnalysis();
   });
-
-  result.innerHTML = highlighted.join('');
-
-  for (let key in categories) {
-    if (counts[key] > 0) {
-      const li = document.createElement('li');
-      li.textContent = `${categories[key].label}：${counts[key]} 件`;
-      summary.appendChild(li);
+  for (const radio of document.querySelectorAll('[name="input-mode"]')) radio.addEventListener('change', renderAnalysis);
+  document.getElementById('to-escape').addEventListener('click', () => {
+    const input = document.getElementById('inputText');
+    input.value = L.escapeForInput(input.value);
+    document.getElementById('mode-escape').checked = true;
+    renderAnalysis();
+  });
+  document.getElementById('to-plain').addEventListener('click', () => {
+    const decoded = interpretedInput();
+    if (L.needsEscapeMode(decoded.text)) {
+      document.getElementById('input-message').textContent = t('input.cr');
+      return;
     }
-  }
-
-  if (Object.values(counts).every((v) => v === 0)) {
-    const li = document.createElement('li');
-    li.textContent = '異常文字は検出されませんでした。';
-    summary.appendChild(li);
-  }
+    document.getElementById('inputText').value = decoded.text;
+    document.getElementById('mode-plain').checked = true;
+    renderAnalysis();
+  });
+  document.getElementById('clear-input').addEventListener('click', () => setSampleText(''));
+  addEventListener('hashchange', parseUrlParameters);
+  renderAnalysis();
+  parseUrlParameters();
 }
 
+// --- 判定・内訳と論理順の表示 ---
+function renderAnalysis() {
+  clearTimeout(analysisTimer);
+  const decoded = interpretedInput();
+  currentResult = L.analyze(decoded.text);
+  const result = currentResult;
+  const escape = document.getElementById('mode-escape').checked;
+  document.getElementById('to-escape').disabled = escape;
+  document.getElementById('to-plain').disabled = !escape;
+  const messages = [];
+  if (decoded.errors.length) messages.push(t('input.errors', { n: decoded.errors.length }));
+  if (result.truncated) messages.push(t('input.truncated'));
+  document.getElementById('input-message').textContent = messages.join(t('message.separator'));
+  document.getElementById('input-stats').textContent = t('input.stats', result.length);
+  const verdict = document.getElementById('verdict');
+  verdict.dataset.verdict = result.text ? result.verdict : 'empty';
+  verdict.textContent = t('verdict.' + verdict.dataset.verdict);
+  const summary = document.getElementById('summaryList');
+  summary.replaceChildren();
+  for (const category of L.CATEGORY_ORDER) {
+    const count = result.counts[category];
+    if (!count.total) continue;
+    const breakdown = L.SEVERITY_ORDER.filter(severity => count[severity]).map(severity =>
+      t('summary.part', { severity: t('severity.' + severity), count: count[severity] })).join(t('summary.separator'));
+    summary.append(element('li', t('summary.item', { category: t('category.' + category), count: count.total, breakdown })));
+  }
+  if (!summary.childElementCount) summary.append(element('li', t(result.text ? 'verdict.clean' : 'summary.empty')));
+  document.getElementById('view-rendered').textContent = result.text;
+  renderLogical(result);
+  document.getElementById('char-detail').textContent = t('detail.initial');
+}
 
-// --- デバッグ表示 ---
-function debugCharCodes(str) {
-  console.log(
-    [...str]
-      .map((c) => `${c} (U+${c.codePointAt(0).toString(16).toUpperCase()})`)
-      .join(', ')
-  );
+function renderLogical(result) {
+  const view = document.getElementById('view-logical');
+  const fragment = document.createDocumentFragment();
+  let plain = '';
+  const flush = () => {
+    if (plain) fragment.append(element('span', plain));
+    plain = '';
+  };
+  for (const char of result.chars.slice(0, L.VIEW_LIMIT)) {
+    if (!char.category && !char.newline) { plain += char.ch; continue; }
+    flush();
+    if (char.newline) {
+      const mark = element('span', charLabel(char), 'newline-mark');
+      mark.setAttribute('aria-hidden', 'true');
+      fragment.append(mark);
+      if (char.cp === 10) fragment.append(element('br'));
+      continue;
+    }
+    const chip = element('button', charLabel(char), 'chip');
+    chip.type = 'button';
+    chip.dataset.severity = char.severity;
+    chip.dataset.index = String(char.index);
+    chip.setAttribute('aria-pressed', 'false');
+    chip.setAttribute('aria-label', t('char.aria', {
+      codePoint: L.describeCodePoint(char.cp).codePoint, name: charName(char), severity: t('severity.' + char.severity)
+    }));
+    fragment.append(chip);
+  }
+  flush();
+  view.replaceChildren(fragment);
+  document.getElementById('view-limit').textContent = result.chars.length > L.VIEW_LIMIT ? t('view.limit') : '';
 }
