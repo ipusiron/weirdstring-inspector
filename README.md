@@ -138,8 +138,8 @@ URLの`?text=`または`#text=`へ、URLエンコードした文字列を渡せ�
 `source`で呼び出し元、`attack_type`で表示用の説明を指定できます。既存の?text=形式も使えます。
 
 ```text
-https://ipusiron.github.io/weirdstring-inspector/?text=flag%0D.txt&source=clipthreat-studio       # undefined
-https://ipusiron.github.io/weirdstring-inspector/#text=abc%E2%80%AEtxt.galf&source=qr-risk-radar  # undefined
+https://ipusiron.github.io/weirdstring-inspector/?text=flag%0D.txt&source=clipthreat-studio
+https://ipusiron.github.io/weirdstring-inspector/#text=abc%E2%80%AEtxt.galf&source=qr-risk-radar
 ```
 
 ?text=の内容は、URLの一部としてGitHub Pagesのサーバーへ送られます（アクセスログに残る可能性があります）。#text=の内容はサーバーへ送られません。
@@ -224,6 +224,7 @@ weirdstring-inspector/                     # 文字列に紛れた不審なUnico
 ├── script.js                              # 画面の処理（入力・表示の組み立て・タブ・ヘルプ・テーマ）
 ├── style.css                              # CSS変数の配色（ライト・ダーク）とレスポンシブレイアウト
 ├── test/                                  # node --testの自動テスト（依存なし）
+│   ├── actions.test.js                    # 除去の保持条件と2文字列比較の検証
 │   ├── contrast.test.js                   # 文字色と面のコントラストの検証（ライト・ダーク）
 │   ├── context.test.js                    # 旗と異体字の文脈、分散した復元候補の検証
 │   ├── data.test.js                       # そっくり文字の表が公式の原本から生成したものと一致することの検証
@@ -247,6 +248,7 @@ weirdstring-inspector/                     # 文字列に紛れた不審なUnico
 │       ├── emoji-variation-sequences.txt  # Unicode 18.0の絵文字異体字原本
 │       ├── StandardizedVariants.txt       # Unicode 18.0の標準異体字原本
 │       └── LICENSE-UNICODE.txt            # Unicode License V3
+├── weirdstring-actions.js                 # 除去と比較の純粋処理
 ├── weirdstring-data.js                    # ASCIIに見える文字の表（tools/build-confusables.jsの生成物）
 ├── weirdstring-context-data.js            # 旗と異体字と日本語16組の生成データ
 ├── weirdstring-logic.js                   # 画面に依存しない純粋なロジック（Nodeのテストからも読む）

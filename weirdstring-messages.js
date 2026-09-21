@@ -190,6 +190,25 @@
     'context.unverified': 'IVDの登録や、モンゴル文字の位置に応じた字形は検証していません。',
     'hidden.unverifiedFlag': '旗の形ですが、既知の推奨列としては未確認です。'
   });
+  Object.assign(ja, {
+    'remove.item': '位置{index}・{codePoint}・{reason}',
+    'remove.empty': 'この機能で除去する候補はありません。',
+    'remove.result': '{n}コードポイントを除去。再解析の結果：{verdict}',
+    'actions.incomplete': '入力の解釈エラーまたは解析上限のため、この操作を完了できません。',
+    'actions.stale': '入力が変わりました。もう一度結果を作成してください。',
+    'compare.exactEqual': '完全一致',
+    'compare.nfcEqual': 'NFC正規化後',
+    'compare.nfkcEqual': 'NFKC正規化後',
+    'compare.comparableEqual': '本ツールの比較用変換後',
+    'compare.japanesePairEqual': 'NFC＋日本語16組の比較後',
+    'compare.match': '一致',
+    'compare.different': '不一致',
+    'compare.row': '{kind}：{result}',
+    'compare.position': '{side}：コードポイントindex {index}・UTF-16 offset {offset}・{codePoint}',
+    'compare.end': '{side}：文字列の末尾',
+    'compare.context': '{side}の前後8コードポイント：{text}',
+    'compare.empty': '比較用変換で空になった入力があります。安全性や見た目の一致を意味しません。'
+  });
   const API = { ja, format };
   if (typeof module === 'object' && module.exports) {
     module.exports = API;

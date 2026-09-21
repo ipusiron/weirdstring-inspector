@@ -86,6 +86,35 @@
           <h3>正規化</h3>
           <ul id="normalization-list"></ul>
         </section>
+        <details id="remove-panel" class="action-panel">
+          <summary>選択した文字を除いてコピー</summary>
+          <p>危険と判定した除去候補だけを初期選択します。注意の候補は自分で選べます。原文は変わりません。</p>
+          <button type="button" id="prepare-removal">除去候補を確認</button>
+          <div id="removal-candidates"></div>
+          <label for="removal-preview">除去後の見た目（手動コピーもできます）</label>
+          <textarea id="removal-preview" rows="3" readonly spellcheck="false"></textarea>
+          <h4>除去後のエスケープ表記</h4>
+          <pre id="removal-escaped"></pre>
+          <p id="removal-result" role="status"></p>
+          <p>除去後も不審な文字や危険な内容が残る場合があります。</p>
+          <button type="button" id="copy-removal" disabled>選択した文字を除いてコピー</button>
+        </details>
+        <details id="compare-panel" class="action-panel">
+          <summary>別の文字列と比較</summary>
+          <label for="compare-input">比較する文字列B（Aは上の検査入力）</label>
+          <textarea id="compare-input" rows="4" maxlength="200000" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+          <fieldset>
+            <legend>Bの読み方</legend>
+            <label><input type="radio" name="compare-mode" id="compare-plain" value="plain" checked>そのまま読む</label>
+            <label><input type="radio" name="compare-mode" id="compare-escape" value="escape">エスケープ表記を解釈する</label>
+          </fieldset>
+          <div class="input-actions">
+            <button type="button" id="compare-texts">AとBを比較</button>
+            <button type="button" id="swap-inputs">AとBを交換</button>
+          </div>
+          <p>一致の根拠を別々に表示します。見た目や安全性の一致、完全なUTS #39 skeletonを示すものではありません。</p>
+          <div id="comparison-result" role="status"></div>
+        </details>
         <h3>文字の表</h3>
         <label><input type="checkbox" id="table-all">すべての文字を表示</label>
         <div class="table-scroll" tabindex="0" role="region" aria-label="文字の表（横にスクロールできます）">
@@ -220,6 +249,7 @@
     <script src="weirdstring-context-data.js"></script>
     <script src="weirdstring-messages.js"></script>
     <script src="weirdstring-logic.js"></script>
+    <script src="weirdstring-actions.js"></script>
     <script src="samples.js"></script>
     <script src="script.js"></script>
   </body>

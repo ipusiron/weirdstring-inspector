@@ -107,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 入力の経路を初期化
   initInput();
   initDetails();
+  initActions();
   
   // サンプルカテゴリ初期化
   initSampleTabs();
@@ -115,9 +116,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- 辞書とDOMの共通処理 ---
 const L = WeirdStringLogic;
+const A = WeirdStringActions;
 const t = (key, params) => WeirdStringMessages.format('ja', key, params);
 let analysisTimer = null;
 let currentResult = null;
+let revision = 0;
+let removalState = null;
+let comparisonState = null;
+
+function invalidateActions() {
+  revision++;
+  removalState = null;
+  comparisonState = null;
+  document.getElementById('copy-removal').disabled = true;
+  document.getElementById('removal-candidates').replaceChildren();
+  document.getElementById('removal-preview').value = '';
+  document.getElementById('removal-escaped').textContent = '';
+  document.getElementById('removal-result').textContent = t('actions.stale');
+  document.getElementById('comparison-result').textContent = t('actions.stale');
+}
 
 function element(tag, text, className) {
   const node = document.createElement(tag);
@@ -194,6 +211,7 @@ function switchSampleCategory(category) {
 
 // --- プログラムからの入力はこの経路に集める ---
 function setSampleText(text) {
+  invalidateActions();
   const escape = L.needsEscapeMode(text);
   document.getElementById('mode-escape').checked = escape;
   document.getElementById('mode-plain').checked = !escape;
@@ -208,12 +226,17 @@ function interpretedInput() {
 
 function initInput() {
   document.getElementById('inputText').addEventListener('input', () => {
+    invalidateActions();
     clearTimeout(analysisTimer);
     if (document.getElementById('inputText').value.length > 20000) analysisTimer = setTimeout(renderAnalysis, 200);
     else renderAnalysis();
   });
-  for (const radio of document.querySelectorAll('[name="input-mode"]')) radio.addEventListener('change', renderAnalysis);
+  for (const radio of document.querySelectorAll('[name="input-mode"]')) radio.addEventListener('change', () => {
+    invalidateActions();
+    renderAnalysis();
+  });
   document.getElementById('to-escape').addEventListener('click', () => {
+    invalidateActions();
     const input = document.getElementById('inputText');
     input.value = L.escapeForInput(input.value);
     document.getElementById('mode-escape').checked = true;
@@ -227,6 +250,7 @@ function initInput() {
     }
     document.getElementById('inputText').value = decoded.text;
     document.getElementById('mode-plain').checked = true;
+    invalidateActions();
     renderAnalysis();
   });
   document.getElementById('clear-input').addEventListener('click', () => setSampleText(''));
@@ -413,4 +437,118 @@ function renderTable(result) {
   }
   document.querySelector('#char-table tbody').replaceChildren(fragment);
   document.getElementById('table-limit').textContent = chars.length > L.TABLE_LIMIT ? t('table.limit') : '';
+}
+
+// --- Optional operations use snapshots, not text read back from result elements. ---
+function initActions() {
+  document.getElementById('prepare-removal').addEventListener('click', prepareRemoval);
+  document.getElementById('copy-removal').addEventListener('click', () => {
+    if (removalState?.revision === revision) copyText(removalState.preview.text);
+  });
+  document.getElementById('removal-candidates').addEventListener('change', event => {
+    if (!removalState || removalState.revision !== revision) return;
+    const index = Number(event.target.dataset.index);
+    if (!removalState.plan.candidates.some(char => char.index === index)) return;
+    if (event.target.checked) removalState.selected.add(index);
+    else removalState.selected.delete(index);
+    renderRemovalPreview();
+  });
+  document.getElementById('compare-input').addEventListener('input', invalidateActions);
+  for (const radio of document.querySelectorAll('[name="compare-mode"]')) radio.addEventListener('change', invalidateActions);
+  document.getElementById('compare-texts').addEventListener('click', () => {
+    const left = interpretedInput();
+    const right = interpretedComparison();
+    comparisonState = left.errors.length || right.errors.length ? { status: 'incomplete' } : A.compareTexts(left.text, right.text);
+    renderComparison();
+  });
+  document.getElementById('swap-inputs').addEventListener('click', () => {
+    const input = document.getElementById('inputText');
+    const other = document.getElementById('compare-input');
+    [input.value, other.value] = [other.value, input.value];
+    const escape = document.getElementById('mode-escape').checked;
+    document.getElementById('mode-escape').checked = document.getElementById('compare-escape').checked;
+    document.getElementById('mode-plain').checked = !document.getElementById('mode-escape').checked;
+    document.getElementById('compare-escape').checked = escape;
+    document.getElementById('compare-plain').checked = !escape;
+    invalidateActions();
+    renderAnalysis();
+  });
+}
+
+function interpretedComparison() {
+  const value = document.getElementById('compare-input').value;
+  return document.getElementById('compare-escape').checked ? L.decodeEscapes(value) : { text: value, errors: [] };
+}
+
+function prepareRemoval() {
+  renderAnalysis();
+  const decoded = interpretedInput();
+  if (decoded.errors.length || currentResult.truncated) {
+    document.getElementById('removal-result').textContent = t('actions.incomplete');
+    return;
+  }
+  const plan = A.buildRemovalPlan(currentResult);
+  removalState = { revision, text: decoded.text, plan, selected: new Set(plan.defaultIndices) };
+  renderRemovalCandidates();
+  renderRemovalPreview();
+}
+
+function renderRemovalCandidates() {
+  const container = document.getElementById('removal-candidates');
+  container.replaceChildren();
+  for (const char of removalState.plan.candidates) {
+    const label = element('label', undefined, 'removal-choice');
+    const checkbox = element('input');
+    checkbox.type = 'checkbox';
+    checkbox.dataset.index = String(char.index);
+    checkbox.checked = removalState.selected.has(char.index);
+    label.append(checkbox, element('span', t('remove.item', {
+      index: char.index + 1, codePoint: L.describeCodePoint(char.cp).codePoint, reason: t('reason.' + char.reason)
+    })));
+    container.append(label);
+  }
+  if (!container.childElementCount) container.append(element('p', t('remove.empty')));
+}
+
+function renderRemovalPreview() {
+  const preview = A.removeSelected(removalState.text, removalState.selected);
+  removalState.preview = preview;
+  const result = L.analyze(preview.text);
+  document.getElementById('removal-preview').value = preview.text;
+  document.getElementById('removal-escaped').textContent = L.escapeForInput(preview.text);
+  document.getElementById('removal-result').textContent = t('remove.result', {
+    n: preview.removed.length, verdict: t('verdict.' + (result.text ? result.verdict : 'empty'))
+  });
+  document.getElementById('copy-removal').disabled = removalState.revision !== revision;
+}
+
+function renderComparison() {
+  const container = document.getElementById('comparison-result');
+  container.replaceChildren();
+  if (comparisonState.status !== 'complete') {
+    container.textContent = t('actions.incomplete');
+    return;
+  }
+  const flags = ['exactEqual', 'nfcEqual', 'nfkcEqual', 'comparableEqual', 'japanesePairEqual'];
+  const list = element('ul');
+  for (const key of flags) {
+    const row = element('li', t('compare.row', {
+      kind: t('compare.' + key), result: t(comparisonState[key] ? 'compare.match' : 'compare.different')
+    }));
+    row.dataset.match = String(comparisonState[key]);
+    list.append(row);
+  }
+  container.append(list);
+  if (comparisonState.transformedEmpty) container.append(element('p', t('compare.empty')));
+  const diff = comparisonState.firstDifference;
+  if (!diff) return;
+  for (const side of ['a', 'b']) {
+    const position = diff[side];
+    container.append(element('p', position ? t('compare.position', {
+      side: side.toUpperCase(), ...position, codePoint: L.describeCodePoint(position.cp).codePoint
+    }) : t('compare.end', { side: side.toUpperCase() })));
+    container.append(element('pre', t('compare.context', {
+      side: side.toUpperCase(), text: L.escapeForInput(diff[side === 'a' ? 'contextA' : 'contextB'])
+    })));
+  }
 }
