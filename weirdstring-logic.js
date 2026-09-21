@@ -2,6 +2,10 @@
   'use strict';
 
   const DATA = typeof module === 'object' && module.exports ? require('./weirdstring-data.js') : root.WeirdStringData;
+  const CONTEXT = typeof module === 'object' && module.exports ? require('./weirdstring-context-data.js') : root.WeirdStringContextData;
+  const knownFlags = new Set(CONTEXT.rgiFlags.map(value => value.split(' ').map(cp => parseInt(cp, 16)).join(' ')));
+  const knownVariants = new Set(CONTEXT.variants.map(value => value.split(' ').map(cp => parseInt(cp, 16)).join(' ')));
+  const japanesePairs = new Map(CONTEXT.japanesePairs);
   const MAX_CODE_POINTS = 100000;
   const VIEW_LIMIT = 5000;
   const TABLE_LIMIT = 1000;
@@ -141,20 +145,31 @@
     const hidden = [];
     for (const run of runsOf(chars, 'tag')) {
       const start = run[0].index;
-      const emojiFlag = chars[start - 1]?.cp === 0x1f3f4 && run.length > 1 && run.at(-1).cp === 0xe007f &&
+      const flagShape = chars[start - 1]?.cp === 0x1f3f4 && run.length > 1 && run.length + 1 <= 32 && run.at(-1).cp === 0xe007f &&
         run.slice(0, -1).every(char => (char.cp >= 0xe0030 && char.cp <= 0xe0039) || (char.cp >= 0xe0061 && char.cp <= 0xe007a));
+      const emojiFlag = flagShape && knownFlags.has([0x1f3f4, ...run.map(char => char.cp)].join(' '));
       for (const char of run) {
-        char.reason = emojiFlag ? 'emojiFlag' : 'tagRun';
-        char.severity = emojiFlag ? 'info' : 'danger';
+        char.reason = emojiFlag ? 'emojiFlag' : flagShape ? 'emojiFlagUnverified' : 'tagRun';
+        char.severity = emojiFlag ? 'info' : flagShape ? 'caution' : 'danger';
       }
       hidden.push({
         kind: emojiFlag ? 'emojiFlag' : 'tag', start, end: run.at(-1).index, count: run.length,
+        ...(flagShape && !emojiFlag ? { flagStatus: 'unverified' } : {}),
         text: run.filter(char => char.cp >= 0xe0020 && char.cp <= 0xe007e)
           .map(char => String.fromCodePoint(char.cp - 0xe0000)).join(''), bytes: null
       });
     }
     for (const run of runsOf(chars, 'variation')) {
-      if (run.length < 2) continue;
+      if (run.length < 2) {
+        const char = run[0];
+        const prev = chars[char.index - 1];
+        const known = prev && knownVariants.has(prev.cp + ' ' + char.cp);
+        const hanIvs = prev && /\p{Script=Han}/u.test(prev.ch) && char.cp >= 0xe0100 && char.cp <= 0xe01ef;
+        const fvs = [0x180b, 0x180c, 0x180d, 0x180f].includes(char.cp);
+        if (!known && !hanIvs && !fvs) Object.assign(char, { reason: 'variationUnexpected', severity: 'caution' });
+        if (!known && (hanIvs || fvs)) char.contextUnverified = true;
+        continue;
+      }
       const bytes = [];
       for (const char of run) {
         char.severity = 'danger';
@@ -170,7 +185,56 @@
       hidden.push({ kind: 'variation', start: run[0].index, end: run.at(-1).index, count: run.length,
         text, bytes: bytes.map(byte => hex(byte, 2)).join(' ') });
     }
+    const isBase = char => char && !/[\s\p{C}\p{M}\p{Default_Ignorable_Code_Point}]/u.test(char.ch);
+    let distributed = [];
+    const flush = () => {
+      if (distributed.length > 1) {
+        const bytes = distributed.map(char => char.cp < 0xe0100 ? char.cp - 0xfe00 : char.cp - 0xe0100 + 16);
+        let text = null;
+        try {
+          text = new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(bytes));
+          if (/[\x00-\x08\x0b-\x1f\x7f-\x9f]/.test(text)) text = null;
+        } catch { /* A candidate need not be valid UTF-8. */ }
+        hidden.push({ kind: 'variationDistributed', start: distributed[0].index, end: distributed.at(-1).index,
+          count: distributed.length, indices: distributed.map(char => char.index), candidate: true,
+          bytes: bytes.map(byte => hex(byte, 2)).join(' '), text });
+      }
+      distributed = [];
+    };
+    for (const char of chars) {
+      if (char.reason !== 'variationUnexpected' || !isBase(chars[char.index - 1])) continue;
+      if (distributed.length && char.index !== distributed.at(-1).index + 2) flush();
+      distributed.push(char);
+    }
+    flush();
     return hidden.sort((a, b) => a.start - b.start);
+  }
+
+  function contextualizeJapanese(chars) {
+    const letter = ch => /\p{Script=Katakana}/u.test(ch) && /\p{L}/u.test(ch);
+    let start = 0;
+    while (start < chars.length) {
+      if (!/[\p{L}\p{M}]/u.test(chars[start].ch)) { start++; continue; }
+      let end = start;
+      while (end < chars.length && /[\p{L}\p{M}]/u.test(chars[end].ch)) end++;
+      const han = chars.slice(start, end).filter(char => /\p{Script=Han}/u.test(char.ch));
+      if (han.length === 1 && japanesePairs.has(han[0].cp) && han[0].severity !== 'danger') {
+        const target = han[0];
+        let count = 0;
+        for (const step of [-1, 1]) {
+          for (let i = target.index + step; i >= start && i < end; i += step) {
+            const char = chars[i];
+            if (letter(char.ch)) count++;
+            else if (char.cp === 0x30fc) continue;
+            else if ([0x3099, 0x309a].includes(char.cp) && i > start && letter(chars[i - 1].ch)) continue;
+            else break;
+          }
+        }
+        if (count >= 2) Object.assign(target, { category: 'lookalike', severity: 'caution', reason: 'japaneseConfusable',
+          japaneseTarget: String.fromCodePoint(japanesePairs.get(target.cp)) });
+      }
+      start = end;
+    }
   }
 
   function contextualize(chars) {
@@ -334,6 +398,7 @@
     const hidden = hiddenContent(chars);
     const betweenAscii = contextualize(chars);
     const tokens = tokenize(chars);
+    contextualizeJapanese(chars);
     for (const char of chars) {
       const japanese = isJapanese(char.ch, char.cp);
       if (!japanese && !(char.category === 'lookalike' && char.reason === 'lookalike')) continue;

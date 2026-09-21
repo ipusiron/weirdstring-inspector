@@ -181,6 +181,15 @@
     });
   }
 
+  Object.assign(ja, {
+    'reason.emojiFlagUnverified': '旗の形ですが、Unicodeの既知の推奨列としては確認できません。攻撃とは断定できません。',
+    'reason.variationUnexpected': '対応する基底文字と異体字指定の組を確認できません。悪意があるとは限りません。',
+    'reason.japaneseConfusable': 'カタカナ語の中に似た形の漢字があります。候補は「{target}」です。原文は変更していません。',
+    'hidden.variationDistributed': '分散した異体字セレクター',
+    'hidden.candidate': '復元候補。埋め込みの意図は判定できません。',
+    'context.unverified': 'IVDの登録や、モンゴル文字の位置に応じた字形は検証していません。',
+    'hidden.unverifiedFlag': '旗の形ですが、既知の推奨列としては未確認です。'
+  });
   const API = { ja, format };
   if (typeof module === 'object' && module.exports) {
     module.exports = API;

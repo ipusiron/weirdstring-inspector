@@ -142,6 +142,7 @@ function charLabel(char) {
     return L.abbrOf(char.cp) || L.describeCodePoint(char.cp).codePoint;
   }
   if (['zalgo', 'combining'].includes(char.category)) return t('char.combining', { char: char.ch });
+  if (char.japaneseTarget) return t('char.mapping', { char: char.ch, ascii: char.japaneseTarget });
   if (['compat', 'lookalike'].includes(char.category) && char.ascii !== null) {
     return t('char.mapping', { char: char.ch, ascii: char.ascii });
   }
@@ -326,7 +327,8 @@ function showCharDetail(char) {
   const fields = [
     ['detail.name', [description.abbr, charName(char)].filter(Boolean).join(' / ')],
     ['detail.category', t('category.' + char.category)], ['detail.severity', t('severity.' + char.severity)],
-    ['detail.reason', t('reason.' + char.reason, { ascii: char.ascii })], ['detail.script', scriptName(description.script)],
+    ['detail.reason', t('reason.' + char.reason, { ascii: char.ascii, target: char.japaneseTarget })],
+    ['detail.script', scriptName(description.script)],
     ['detail.gc', description.generalCategory], ['detail.utf8', description.utf8], ['detail.utf16', description.utf16],
     ['detail.escape', description.escape]
   ];
@@ -339,6 +341,7 @@ function showCharDetail(char) {
   link.target = '_blank';
   link.rel = 'noopener noreferrer';
   detail.append(heading, list, link);
+  if (char.contextUnverified) detail.append(element('p', t('context.unverified')));
 }
 
 async function copyText(text) {
@@ -360,9 +363,11 @@ function renderPanels(result) {
     block.append(element('p', t('hidden.item', {
       kind: t('hidden.' + item.kind), start: item.start + 1, count: item.count
     })));
-    block.append(element('pre', item.text === null ? t('hidden.unreadable') : item.text));
+    block.append(element('pre', item.text === null ? t('hidden.unreadable') : L.escapeForInput(item.text)));
+    if (item.candidate) block.append(element('p', t('hidden.candidate')));
+    if (item.flagStatus === 'unverified') block.append(element('p', t('hidden.unverifiedFlag')));
     if (item.bytes !== null) block.append(element('p', t('hidden.bytes', { bytes: item.bytes })));
-    if (['tag', 'variation'].includes(item.kind) && item.text) {
+    if (['tag', 'variation', 'variationDistributed'].includes(item.kind) && item.text) {
       const copy = element('button', t('hidden.copy'));
       copy.type = 'button';
       copy.addEventListener('click', () => copyText(item.text));

@@ -563,8 +563,8 @@ const primary = [
 [
 "U+FE00",
 "variation",
-"info",
-"variationSingle",
+"caution",
+"variationUnexpected",
 "—",
 "VS1",
 "Inherited",
@@ -573,8 +573,8 @@ const primary = [
 [
 "U+FE0F",
 "variation",
-"info",
-"variationSingle",
+"caution",
+"variationUnexpected",
 "—",
 "VS16",
 "Inherited",
@@ -693,8 +693,8 @@ const primary = [
 [
 "U+E0100",
 "variation",
-"info",
-"variationSingle",
+"caution",
+"variationUnexpected",
 "—",
 "VS17",
 "Inherited",
@@ -703,8 +703,8 @@ const primary = [
 [
 "U+E01EF",
 "variation",
-"info",
-"variationSingle",
+"caution",
+"variationUnexpected",
 "—",
 "VS256",
 "Inherited",
@@ -1876,4 +1876,3 @@ test('invariants, all categories, offsets, purity, and 100000-point bound', () =
   assert.equal(large.length.codePoints, 100000);
   assert.equal(large.counts.invisible.total, 33333);
 });
-

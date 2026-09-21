@@ -13,7 +13,7 @@ test('CSP, local classic scripts and safe markup', () => {
   assert.doesNotMatch(html, /\son[a-z]+\s*=|\sstyle\s*=|type="module"|rel="icon"|id="resultArea"/i);
   assert.doesNotMatch(html, /<(?:script|link|img)\b[^>]*(?:src|href)="https?:/i);
   assert.deepEqual(Array.from(html.matchAll(/<script src="([^"]+)"/g), m => m[1]), [
-    'weirdstring-data.js', 'weirdstring-messages.js', 'weirdstring-logic.js', 'samples.js', 'script.js'
+    'weirdstring-data.js', 'weirdstring-context-data.js', 'weirdstring-messages.js', 'weirdstring-logic.js', 'samples.js', 'script.js'
   ]);
   for (const tag of html.match(/<a\b[^>]*target="_blank"[^>]*>/g)) assert.match(tag, /rel="noopener noreferrer"/);
 });

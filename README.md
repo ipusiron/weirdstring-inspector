@@ -138,8 +138,8 @@ URLの`?text=`または`#text=`へ、URLエンコードした文字列を渡せ�
 `source`で呼び出し元、`attack_type`で表示用の説明を指定できます。既存の?text=形式も使えます。
 
 ```text
-https://ipusiron.github.io/weirdstring-inspector/?text=flag%0D.txt&source=clipthreat-studio
-https://ipusiron.github.io/weirdstring-inspector/#text=abc%E2%80%AEtxt.galf&source=qr-risk-radar
+https://ipusiron.github.io/weirdstring-inspector/?text=flag%0D.txt&source=clipthreat-studio       # undefined
+https://ipusiron.github.io/weirdstring-inspector/#text=abc%E2%80%AEtxt.galf&source=qr-risk-radar  # undefined
 ```
 
 ?text=の内容は、URLの一部としてGitHub Pagesのサーバーへ送られます（アクセスログに残る可能性があります）。#text=の内容はサーバーへ送られません。
@@ -203,46 +203,54 @@ READMEの表・数値と、README・samples.mdの実物の例がエスケープ�
 ## 📁 ディレクトリー構造
 
 ```text
-weirdstring-inspector/                # 文字列に紛れた不審なUnicode文字を検出するWebツール
-├── .github/                          # GitHubの設定
-│   └── workflows/                    # GitHub Actionsのワークフロー
-│       └── test.yml                  # pushとpull_requestでnpm testを実行
-├── .gitignore                        # Git管理から除外するファイルの指定
-├── .nojekyll                         # PagesのJekyll処理を無効化
-├── assets/                           # READMEに載せる画像
-│   ├── screenshot.png                # Trojan Source型のサンプルを読み込んだ画面（見た目と中身の対比）
-│   ├── screenshot2.png               # タグ文字に隠した文を復元した画面
-│   ├── screenshot3.png               # キリル文字のappleを読み込んだ画面（語の判定と比較用の文字列）
-│   └── screenshot4.png               # screenshot.pngと同じ状態のダークモード
-├── CLAUDE.md                         # AI向けの開発ガイド
-├── index.html                        # 画面のマークアップ（入力・判定・見た目と中身・各パネル・サンプル・ヘルプ）
-├── LICENSE                           # 本ツールのMITライセンス
-├── package.json                      # 依存なしのnpm test定義
-├── README.md                         # 本ドキュメント
-├── samples.js                        # 学習用サンプル（11種類）
-├── samples.md                        # サンプルの解説。コピーして試せる実物つき（tools/build-samples-md.jsの生成物）
-├── script.js                         # 画面の処理（入力・表示の組み立て・タブ・ヘルプ・テーマ）
-├── style.css                         # CSS変数の配色（ライト・ダーク）とレスポンシブレイアウト
-├── test/                             # node --testの自動テスト（依存なし）
-│   ├── contrast.test.js              # 文字色と面のコントラストの検証（ライト・ダーク）
-│   ├── data.test.js                  # そっくり文字の表が公式の原本から生成したものと一致することの検証
-│   ├── escape.test.js                # エスケープ表記の解釈と往復の検証
-│   ├── format.test.js                # 行長と読みやすさの検証
-│   ├── html.test.js                  # CSP・ARIA・インライン属性なしの検証
-│   ├── logic.test.js                 # 分類・重大度・語とスクリプト・隠された内容・双方向制御の検証
-│   ├── readme.test.js                # 表（実物の例を含む）・数値・画像・ツリー・YAMLの検証
-│   ├── samples.test.js               # サンプルの判定と、samples.mdの実物がサンプルと一致することの検証
-│   ├── static.test.js                # 純粋性・禁止している書き方・辞書・CI設定の検証
-│   └── url.test.js                   # URLからの入力（?text=と#text=）の検証
-├── tools/                            # 開発用のスクリプトとデータの原本（公開ページからは使わない）
-│   ├── build-confusables.js          # confusables.txtからweirdstring-data.jsを作り直す（--checkで差分の確認）
-│   ├── build-samples-md.js           # samples.jsからsamples.mdを作り直す（--checkで差分の確認）
-│   └── unicode/                      # Unicode公式のデータ
-│       ├── confusables.txt           # UTS #39のconfusables.txt（Version 18.0.0の原本）
-│       └── LICENSE-UNICODE.txt       # Unicode License V3
-├── weirdstring-data.js               # ASCIIに見える文字の表（tools/build-confusables.jsの生成物）
-├── weirdstring-logic.js              # 画面に依存しない純粋なロジック（Nodeのテストからも読む）
-└── weirdstring-messages.js           # 画面の文言の辞書と、キーから文を作る関数
+weirdstring-inspector/                     # 文字列に紛れた不審なUnicode文字を検出するWebツール
+├── .github/                               # GitHubの設定
+│   └── workflows/                         # GitHub Actionsのワークフロー
+│       └── test.yml                       # pushとpull_requestでnpm testを実行
+├── .gitignore                             # Git管理から除外するファイルの指定
+├── .nojekyll                              # PagesのJekyll処理を無効化
+├── assets/                                # READMEに載せる画像
+│   ├── screenshot.png                     # Trojan Source型のサンプルを読み込んだ画面（見た目と中身の対比）
+│   ├── screenshot2.png                    # タグ文字に隠した文を復元した画面
+│   ├── screenshot3.png                    # キリル文字のappleを読み込んだ画面（語の判定と比較用の文字列）
+│   └── screenshot4.png                    # screenshot.pngと同じ状態のダークモード
+├── CLAUDE.md                              # AI向けの開発ガイド
+├── index.html                             # 画面のマークアップ（入力・判定・見た目と中身・各パネル・サンプル・ヘルプ）
+├── LICENSE                                # 本ツールのMITライセンス
+├── package.json                           # 依存なしのnpm test定義
+├── README.md                              # 本ドキュメント
+├── samples.js                             # 学習用サンプル（11種類）
+├── samples.md                             # サンプルの解説。コピーして試せる実物つき（tools/build-samples-md.jsの生成物）
+├── script.js                              # 画面の処理（入力・表示の組み立て・タブ・ヘルプ・テーマ）
+├── style.css                              # CSS変数の配色（ライト・ダーク）とレスポンシブレイアウト
+├── test/                                  # node --testの自動テスト（依存なし）
+│   ├── contrast.test.js                   # 文字色と面のコントラストの検証（ライト・ダーク）
+│   ├── context.test.js                    # 旗と異体字の文脈、分散した復元候補の検証
+│   ├── data.test.js                       # そっくり文字の表が公式の原本から生成したものと一致することの検証
+│   ├── escape.test.js                     # エスケープ表記の解釈と往復の検証
+│   ├── format.test.js                     # 行長と読みやすさの検証
+│   ├── html.test.js                       # CSP・ARIA・インライン属性なしの検証
+│   ├── japanese.test.js                   # 日本語16組と通常文の警告条件の検証
+│   ├── logic.test.js                      # 分類・重大度・語とスクリプト・隠された内容・双方向制御の検証
+│   ├── readme.test.js                     # 表（実物の例を含む）・数値・画像・ツリー・YAMLの検証
+│   ├── samples.test.js                    # サンプルの判定と、samples.mdの実物がサンプルと一致することの検証
+│   ├── static.test.js                     # 純粋性・禁止している書き方・辞書・CI設定の検証
+│   └── url.test.js                        # URLからの入力（?text=と#text=）の検証
+├── tools/                                 # 開発用のスクリプトとデータの原本（公開ページからは使わない）
+│   ├── build-confusables.js               # confusables.txtからweirdstring-data.jsを作り直す（--checkで差分の確認）
+│   ├── build-context-data.js              # 旗と異体字と日本語の追加データを生成
+│   ├── build-samples-md.js                # samples.jsからsamples.mdを作り直す（--checkで差分の確認）
+│   └── unicode/                           # Unicode公式のデータ
+│       ├── confusables.txt                # UTS #39のconfusables.txt（Version 18.0.0の原本）
+│       ├── context-manifest.json          # 追加データの取得元とハッシュと件数
+│       ├── emoji-sequences.txt            # Unicode 18.0の絵文字列原本
+│       ├── emoji-variation-sequences.txt  # Unicode 18.0の絵文字異体字原本
+│       ├── StandardizedVariants.txt       # Unicode 18.0の標準異体字原本
+│       └── LICENSE-UNICODE.txt            # Unicode License V3
+├── weirdstring-data.js                    # ASCIIに見える文字の表（tools/build-confusables.jsの生成物）
+├── weirdstring-context-data.js            # 旗と異体字と日本語16組の生成データ
+├── weirdstring-logic.js                   # 画面に依存しない純粋なロジック（Nodeのテストからも読む）
+└── weirdstring-messages.js                # 画面の文言の辞書と、キーから文を作る関数
 ```
 
 ## 💻 動作環境
