@@ -18,7 +18,7 @@
     "detail.escape": "エスケープ表記",
     "detail.unicode": "Unicode公式の文字ページを開く",
     "copy.success": "コピーしました",
-    "copy.failure": "コピーできませんでした。HTTPSまたはlocalhostで開くと使えます",
+    "copy.failure": "コピーできませんでした。文字列を選択して手動でコピーしてください",
     "hidden.item": "{kind}：{start}文字目から、{count}個",
     "hidden.tag": "タグ文字",
     "hidden.variation": "異体字セレクター",
@@ -218,6 +218,19 @@
     'file.length': '100,000コードポイントを超えています。元の入力は変更していません。',
     'file.failure': 'ファイルを読み込めませんでした。元の入力は変更していません。',
     'file.stale': '読み込み中に入力が変わったため、読み込んだ内容を適用しませんでした。'
+  });
+  Object.assign(ja, {
+    'report.heading': 'WeirdString Inspector検査レポート',
+    'report.limits': '検出結果は安全性の証明ではありません。解析の打ち切りと明細の省略は別々に記載しています。',
+    'report.includes': '原文・比較用文字列・個別文字・語・復元内容を含みます。入力由来の文字列は全コードポイントをエスケープしています。',
+    'report.excludes': '概要のみです。原文・語・復元内容・個別文字・ファイル名・連携元の情報は含みません。',
+    'report.ready': '出力を確認してください。JSONは{json}バイト、Markdownは{md}バイトです。',
+    'report.size': 'レポートが5MiBを超えるため保存できません。概要のみで出力してください。',
+    'report.saved': 'レポートのダウンロードを開始しました。',
+    'report.failure': 'レポートを保存できませんでした。ブラウザーのダウンロード設定を確認してください。',
+    'share.length': '共有リンクが8,000文字を超えます。レポートの利用を検討してください。',
+    'share.ready': '共有リンクを作成しました。内容を確認してからコピーしてください。',
+    'share.format': '未対応の共有形式です。入力は変更していません。'
   });
   const API = { ja, format };
   if (typeof module === 'object' && module.exports) {

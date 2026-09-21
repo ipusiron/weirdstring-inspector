@@ -474,6 +474,12 @@
     const query = new URLSearchParams(search.replace(/^\?/, ''));
     const params = fragment.has('text') ? fragment : query.has('text') ? query : null;
     if (!params) return { text: null, source: null, attackType: null, from: null };
+    if (params.has('v') || params.has('mode')) {
+      if (params === fragment && params.get('v') === '2' && params.get('mode') === 'escape') {
+        return { text: params.get('text'), mode: 'escape', source: null, attackType: null, from: 'hash' };
+      }
+      return { text: null, source: null, attackType: null, from: null, error: 'format' };
+    }
     const clipped = (key, limit) => params.has(key) ? Array.from(params.get(key)).slice(0, limit).join('') : null;
     return { text: params.get('text'), source: clipped('source', 40), attackType: clipped('attack_type', 60),
       from: params === fragment ? 'hash' : 'query' };

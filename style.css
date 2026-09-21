@@ -555,6 +555,11 @@ button:disabled {
   overflow: auto;
 }
 
+#report-preview {
+  max-height: 20rem;
+  overflow: auto;
+}
+
 .action-panel pre, #comparison-result {
   overflow-wrap: anywhere;
   white-space: pre-wrap;

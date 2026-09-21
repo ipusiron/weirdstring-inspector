@@ -49,14 +49,24 @@ function closeModal() {
 // --- URLパラメータ解析 ---
 function parseUrlParameters() {
   const incoming = WeirdStringLogic.parseLocation(location.search, location.hash);
+  if (incoming.error) {
+    setNotice('share-status', 'share.format');
+    document.getElementById('export-panel').open = true;
+    return;
+  }
   if (incoming.text === null) return;
-  setSampleText(incoming.text);
+  if (incoming.mode === 'escape') {
+    document.getElementById('inputText').value = incoming.text;
+    document.getElementById('mode-escape').checked = true;
+    invalidateActions();
+    renderAnalysis();
+  } else setSampleText(incoming.text);
   const info = document.getElementById('source-info');
   info.hidden = incoming.source === null;
   const key = incoming.source === 'clipthreat-studio' ? 'source.clipthreat' :
     incoming.source === 'qr-risk-radar' ? 'source.qr' : 'source.other';
   info.textContent = incoming.source === null ? '' : t(key) +
-    (incoming.attackType ? t('source.attack', { attackType: incoming.attackType }) : '');
+    (incoming.attackType ? t('source.attack', { attackType: L.escapeForInput(incoming.attackType) }) : '');
 }
 
 // ページ読み込み時にテーマを初期化
@@ -109,6 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initDetails();
   initActions();
   document.getElementById('file-input').addEventListener('change', loadTextFile);
+  initExports();
   
   // サンプルカテゴリ初期化
   initSampleTabs();
@@ -125,6 +136,8 @@ let revision = 0;
 let removalState = null;
 let comparisonState = null;
 let fileRequest = 0;
+let reportState = null;
+let shareState = null;
 const notices = new Map();
 
 function setNotice(id, key, params = {}) {
@@ -136,6 +149,11 @@ function invalidateActions() {
   revision++;
   removalState = null;
   comparisonState = null;
+  invalidateReport();
+  shareState = null;
+  document.getElementById('share-preview').value = '';
+  document.getElementById('copy-share').disabled = true;
+  setNotice('share-status', 'actions.stale');
   document.getElementById('copy-removal').disabled = true;
   document.getElementById('removal-candidates').replaceChildren();
   document.getElementById('removal-preview').value = '';
@@ -380,9 +398,9 @@ async function copyText(text) {
   try {
     if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') throw new Error('Clipboard unavailable');
     await navigator.clipboard.writeText(text);
-    document.getElementById('status').textContent = t('copy.success');
+    setNotice('status', 'copy.success');
   } catch {
-    document.getElementById('status').textContent = t('copy.failure');
+    setNotice('status', 'copy.failure');
   }
 }
 
@@ -591,5 +609,93 @@ async function loadTextFile() {
     });
   } catch {
     if (request === fileRequest) setNotice('file-status', startedRevision === revision ? 'file.failure' : 'file.stale');
+  }
+}
+
+function invalidateReport() {
+  reportState = null;
+  document.getElementById('save-json').disabled = true;
+  document.getElementById('save-markdown').disabled = true;
+  document.getElementById('report-preview').textContent = '';
+  document.getElementById('report-disclosure').textContent = '';
+  setNotice('report-status', 'actions.stale');
+}
+
+function initExports() {
+  document.getElementById('report-details').addEventListener('change', invalidateReport);
+  document.getElementById('prepare-report').addEventListener('click', prepareReport);
+  document.getElementById('save-json').addEventListener('click', () => saveReport('json'));
+  document.getElementById('save-markdown').addEventListener('click', () => saveReport('md'));
+  document.getElementById('prepare-share').addEventListener('click', () => {
+    const input = interpretedInput();
+    if (input.errors.length) {
+      setNotice('share-status', 'actions.incomplete');
+      return;
+    }
+    const result = A.buildShareUrl(input.text);
+    if (!result.ok) {
+      setNotice('share-status', 'share.length');
+      return;
+    }
+    shareState = { revision, url: result.url };
+    document.getElementById('share-preview').value = result.url;
+    document.getElementById('copy-share').disabled = false;
+    setNotice('share-status', 'share.ready');
+  });
+  document.getElementById('copy-share').addEventListener('click', () => {
+    if (shareState?.revision === revision) copyText(shareState.url);
+  });
+}
+
+function prepareReport() {
+  renderAnalysis();
+  if (interpretedInput().errors.length) {
+    setNotice('report-status', 'actions.incomplete');
+    return;
+  }
+  const report = A.buildReport(currentResult, { details: document.getElementById('report-details').checked, language: 'ja' });
+  reportState = { revision, report };
+  renderReport();
+}
+
+function renderReport() {
+  const json = A.serializeReport(reportState.report, 'json', t);
+  const md = A.serializeReport(reportState.report, 'md', t);
+  if (!json.ok || !md.ok) {
+    invalidateReport();
+    setNotice('report-status', 'report.size');
+    return;
+  }
+  reportState.outputs = { json, md };
+  document.getElementById('report-preview').textContent = json.content;
+  document.getElementById('report-disclosure').textContent = t(reportState.report.includesDetails ? 'report.includes' : 'report.excludes');
+  document.getElementById('save-json').disabled = false;
+  document.getElementById('save-markdown').disabled = false;
+  setNotice('report-status', 'report.ready', { json: json.bytes, md: md.bytes });
+}
+
+function saveReport(format) {
+  if (!reportState || reportState.revision !== revision) return;
+  let url;
+  let link;
+  try {
+    const content = reportState.outputs[format].content;
+    const blob = new Blob([content], { type: format === 'json' ? 'application/json;charset=utf-8' : 'text/markdown;charset=utf-8' });
+    if (blob.size > A.MAX_REPORT_BYTES) {
+      setNotice('report-status', 'report.size');
+      return;
+    }
+    url = URL.createObjectURL(blob);
+    link = element('a');
+    link.href = url;
+    link.download = format === 'json' ? 'weirdstring-report.json' : 'weirdstring-report.md';
+    document.body.append(link);
+    link.click();
+    setNotice('report-status', 'report.saved');
+  } catch {
+    setNotice('report-status', 'report.failure');
+  } finally {
+    link?.remove();
+    if (url) setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 }

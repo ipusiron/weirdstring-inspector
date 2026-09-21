@@ -123,6 +123,26 @@
           <p>一致の根拠を別々に表示します。見た目や安全性の一致、完全なUTS #39 skeletonを示すものではありません。</p>
           <div id="comparison-result" role="status"></div>
         </details>
+        <details id="export-panel" class="action-panel">
+          <summary>レポートと共有リンク</summary>
+          <p>レポートは既定で概要のみです。原文と詳細を含める場合は、出力前に内容を確認してください。</p>
+          <label class="removal-choice"><input type="checkbox" id="report-details">原文と詳細を含める</label>
+          <button type="button" id="prepare-report">レポートを確認</button>
+          <p id="report-disclosure"></p>
+          <pre id="report-preview" tabindex="0" aria-label="レポートのプレビュー"></pre>
+          <div class="input-actions">
+            <button type="button" id="save-json" disabled>JSONで保存</button>
+            <button type="button" id="save-markdown" disabled>Markdownで保存</button>
+          </div>
+          <p id="report-status" role="status"></p>
+          <h4>共有リンク</h4>
+          <p>検査する文字列Aを含みます。機密情報を共有しないでください。受取人、履歴、クリップボードから秘密になるものではありません。</p>
+          <button type="button" id="prepare-share">共有リンクを確認</button>
+          <label for="share-preview">共有するURL（手動コピーもできます）</label>
+          <textarea id="share-preview" rows="3" readonly spellcheck="false"></textarea>
+          <button type="button" id="copy-share" disabled>共有リンクをコピー</button>
+          <p id="share-status" role="status"></p>
+        </details>
         <h3>文字の表</h3>
         <label><input type="checkbox" id="table-all">すべての文字を表示</label>
         <div class="table-scroll" tabindex="0" role="region" aria-label="文字の表（横にスクロールできます）">

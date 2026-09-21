@@ -77,7 +77,81 @@
     return { ok: true, text, bytes: bytes.byteLength, codePoints: length };
   }
 
-  const API = { buildRemovalPlan, removeSelected, compareTexts, MAX_FILE_BYTES, decodeUtf8File };
+  const MAX_REPORT_BYTES = 5 * 1024 * 1024;
+  const MAX_SHARE_LENGTH = 8000;
+  const SHARE_BASE = 'https://ipusiron.github.io/weirdstring-inspector/';
+
+  function escapeAll(text) {
+    return Array.from(text, ch => '\\u{' + ch.codePointAt(0).toString(16).toUpperCase().padStart(4, '0') + '}').join('');
+  }
+
+  function buildReport(result, options = {}) {
+    const language = options.language || 'ja';
+    if (!['ja', 'en'].includes(language)) throw new RangeError('Unsupported report language');
+    const severityCounts = { danger: 0, caution: 0, info: 0, none: 0 };
+    const ruleCounts = {};
+    for (const char of result.chars) {
+      severityCounts[char.severity]++;
+      if (char.reason) ruleCounts[char.reason] = (ruleCounts[char.reason] || 0) + 1;
+    }
+    const report = {
+      schemaVersion: 1, tool: 'WeirdString Inspector', unicodeVersion: C.unicodeVersion, language,
+      analysis: { complete: !result.truncated, analyzedCodePoints: result.length.codePoints, limit: L.MAX_CODE_POINTS },
+      verdict: result.verdict, categoryCounts: structuredClone(result.counts), severityCounts, ruleCounts,
+      includesDetails: options.details === true
+    };
+    if (report.includesDetails) {
+      report.details = {
+        encoding: 'all-code-points-u-braces', text: escapeAll(result.text), comparable: escapeAll(result.comparable),
+        characters: result.chars.slice(0, 1000).map(char => ({
+          index: char.index, offset: char.offset, codePoint: L.describeCodePoint(char.cp).codePoint,
+          text: escapeAll(char.ch), category: char.category, severity: char.severity, reason: char.reason,
+          ascii: char.ascii === null ? null : escapeAll(char.ascii),
+          japaneseTarget: char.japaneseTarget ? escapeAll(char.japaneseTarget) : null
+        })),
+        tokens: result.tokens.slice(0, 100).map(token => ({
+          start: token.start, end: token.end, text: escapeAll(token.text), comparable: escapeAll(token.comparable),
+          scripts: token.scripts.slice(), level: token.level
+        })),
+        hidden: result.hidden.slice(0, 100).map(item => ({
+          kind: item.kind, start: item.start, end: item.end, count: item.count,
+          indices: item.indices ? item.indices.slice() : null, text: item.text === null ? null : escapeAll(item.text),
+          bytes: item.bytes, candidate: item.candidate === true
+        })),
+        totals: { characters: result.chars.length, tokens: result.tokens.length, hidden: result.hidden.length },
+        omitted: {
+          characters: Math.max(0, result.chars.length - 1000), tokens: Math.max(0, result.tokens.length - 100),
+          hidden: Math.max(0, result.hidden.length - 100)
+        }
+      };
+    }
+    return report;
+  }
+
+  function checkReportSize(content) {
+    const bytes = new TextEncoder().encode(content).length;
+    return bytes <= MAX_REPORT_BYTES ? { ok: true, content, bytes } : { ok: false, reason: 'size', bytes };
+  }
+
+  function serializeReport(report, format, translate) {
+    const json = JSON.stringify(report, null, 2);
+    if (format === 'json') return checkReportSize(json + '\n');
+    if (format !== 'md') throw new RangeError('Unsupported report format');
+    const content = '# ' + translate('report.heading') + '\n\n' + translate('report.limits') + '\n\n' +
+      translate(report.includesDetails ? 'report.includes' : 'report.excludes') + '\n\n```json\n' + json + '\n```\n';
+    return checkReportSize(content);
+  }
+
+  function buildShareUrl(text) {
+    const params = new URLSearchParams({ v: '2', mode: 'escape', text: L.escapeForInput(text) });
+    const url = SHARE_BASE + '#' + params.toString();
+    return url.length <= MAX_SHARE_LENGTH ? { ok: true, url } : { ok: false, reason: 'length', length: url.length };
+  }
+
+  const API = {
+    buildRemovalPlan, removeSelected, compareTexts, MAX_FILE_BYTES, decodeUtf8File,
+    MAX_REPORT_BYTES, MAX_SHARE_LENGTH, escapeAll, buildReport, checkReportSize, serializeReport, buildShareUrl
+  };
   if (typeof module === 'object' && module.exports) {
     module.exports = API;
   } else {
