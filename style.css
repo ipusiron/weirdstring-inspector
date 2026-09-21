@@ -2,30 +2,31 @@
 :root {
   /* ライトモード */
   --bg-color: #f9f9f9;
-  --text-color: #333;
+  --text-color: #333333;
   --heading-color: #2c3e50;
   --input-bg: #fff;
   --input-border: #ccc;
-  --button-bg: #3498db;
-  --button-hover-bg: #2980b9;
-  --box-bg: #fff;
+  --button-bg: #1f6aa5;
+  --button-hover-bg: #185683;
+  --box-bg: #ffffff;
   --box-border: #ccc;
-  --tab-bg: #eee;
+  --tab-bg: #eeeeee;
   --tab-active-bg: #fff;
   --tab-border: #ccc;
   --tab-active-border: #aaa;
-  --footer-color: #666;
+  --footer-color: var(--muted-color);
   
-  /* ハイライト色はそのまま維持 */
-  --highlight-invisible: #ffd5d5;
-  --highlight-lookalike: #d5e8ff;
-  --highlight-control: #ffe7b2;
-  --highlight-zalgo: #e6d5ff;
-  --highlight-bidirectional: #ffddee;
-  --highlight-punctuation: #e6ffe6;
-  --highlight-emoji: #fff0cc;
-  --highlight-whitespace: #ddeeff;
-  --highlight-confused: #f0e6ff;
+  --muted-color: #595959;
+  --link-color: #1a5f9e;
+  --button-text: #ffffff;
+  --danger-bg: #ffd6d6;
+  --danger-fg: #8a1111;
+  --caution-bg: #ffe8b3;
+  --caution-fg: #6b4300;
+  --info-bg: #d9e8ff;
+  --info-fg: #0b3d91;
+  --clean-bg: #d9f2df;
+  --clean-fg: #14532d;
 }
 
 /* === ダークモード === */
@@ -35,26 +36,55 @@
   --heading-color: #87ceeb;
   --input-bg: #2a2a2a;
   --input-border: #555;
-  --button-bg: #4a7c7e;
-  --button-hover-bg: #5a8c8e;
+  --button-bg: #2b6f9e;
+  --button-hover-bg: #245c84;
   --box-bg: #2a2a2a;
   --box-border: #555;
-  --tab-bg: #333;
+  --tab-bg: #333333;
   --tab-active-bg: #2a2a2a;
   --tab-border: #555;
   --tab-active-border: #777;
-  --footer-color: #999;
+  --footer-color: var(--muted-color);
   
-  /* ダークモード用ハイライト色（少し暗めに調整） */
-  --highlight-invisible: #cc5555;
-  --highlight-lookalike: #5588cc;
-  --highlight-control: #cc9944;
-  --highlight-zalgo: #9966cc;
-  --highlight-bidirectional: #cc6699;
-  --highlight-punctuation: #66aa66;
-  --highlight-emoji: #ccaa55;
-  --highlight-whitespace: #6699cc;
-  --highlight-confused: #aa88cc;
+  --muted-color: #b0b0b0;
+  --link-color: #7cc4f0;
+  --button-text: #ffffff;
+  --danger-bg: #5c1a1a;
+  --danger-fg: #ffd6d6;
+  --caution-bg: #4d3800;
+  --caution-fg: #ffe8b3;
+  --info-bg: #12335e;
+  --info-fg: #d9e8ff;
+  --clean-bg: #123d22;
+  --clean-fg: #d9f2df;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+.page-header, .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.page-header {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.header-actions {
+  flex-shrink: 0;
+}
+
+a {
+  color: var(--link-color);
+}
+
+:focus-visible {
+  outline: 3px solid var(--link-color);
+  outline-offset: 3px;
 }
 
 /* === 全体レイアウト・中央寄せ === */
@@ -72,6 +102,8 @@ body {
 main {
   max-width: 900px;
   width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 /* === 見出し === */
@@ -83,8 +115,9 @@ h1, h2, h3 {
 
 /* === テキスト入力欄 === */
 textarea {
+  box-sizing: border-box;
   width: 100%;
-  font-size: 1em;
+  font-size: 16px;
   padding: 0.5em;
   margin-top: 0.5em;
   margin-bottom: 1em;
@@ -98,11 +131,13 @@ textarea {
 
 /* === ボタン類 === */
 button {
+  min-height: 44px;
+  max-width: 100%;
   margin: 0.3em 0.3em 0.3em 0;
   padding: 0.4em 1em;
   font-size: 0.95em;
   background-color: var(--button-bg);
-  color: white;
+  color: var(--button-text);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -118,8 +153,8 @@ button:hover {
   background-color: transparent;
   border: 2px solid var(--text-color);
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   display: flex;
   align-items: center;
@@ -139,7 +174,7 @@ button:hover {
 }
 
 /* === 結果表示領域 === */
-#resultArea {
+.text-view {
   margin-top: 1em;
   padding: 0.8em;
   border: 1px solid var(--box-border);
@@ -147,13 +182,94 @@ button:hover {
   background-color: var(--box-bg);
   font-family: monospace;
   white-space: pre-wrap;
-  word-wrap: break-word;
+  overflow-wrap: anywhere;
   transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+#view-logical {
+  direction: ltr;
+  unicode-bidi: bidi-override;
+}
+
+.chip {
+  min-height: 24px;
+  padding: 0.1em 0.4em;
+  margin: 0.1em;
+  vertical-align: baseline;
+  font: inherit;
+  color: var(--text-color);
+  background-color: var(--tab-bg);
+  border: 1px dashed currentColor;
+}
+
+.chip[data-severity="danger"] {
+  border: 2px solid currentColor;
+}
+
+.chip[data-severity="caution"] {
+  border: 1px solid currentColor;
+}
+
+.source-info, #verdict {
+  padding: 0.75em;
+  border: 1px solid var(--box-border);
+  border-radius: 5px;
+  background-color: var(--box-bg);
+}
+
+#input-message:empty, #view-limit:empty {
+  display: none;
+}
+
+fieldset label {
+  display: inline-block;
+  margin-right: 1em;
 }
 
 #summaryList {
   margin-top: 0.5em;
   padding-left: 1.2em;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  padding: 0.4em 0.6em;
+  border: 1px solid var(--box-border);
+  text-align: left;
+}
+
+td {
+  white-space: nowrap;
+}
+
+pre, #token-list, .detail-list dd {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.detail-list {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.3em 1em;
+}
+
+.detail-list dd {
+  margin: 0;
+}
+
+.chip[aria-pressed="true"] {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 
 /* === サンプル表示ボックス === */
@@ -203,47 +319,28 @@ button:hover {
   z-index: 2;
 }
 
-/* === ハイライト（異常文字） === */
-.highlight {
-  font-weight: bold;
-  padding: 0 0.15em;
-  border-radius: 3px;
+.chip[data-severity="danger"], #verdict[data-verdict="danger"] {
+  color: var(--danger-fg);
+  background-color: var(--danger-bg);
+  border-color: var(--danger-fg);
 }
 
-.highlight.invisible {
-  background-color: var(--highlight-invisible);
+.chip[data-severity="caution"], #verdict[data-verdict="caution"] {
+  color: var(--caution-fg);
+  background-color: var(--caution-bg);
+  border-color: var(--caution-fg);
 }
 
-.highlight.lookalike {
-  background-color: var(--highlight-lookalike);
+.chip[data-severity="info"], #verdict[data-verdict="info"] {
+  color: var(--info-fg);
+  background-color: var(--info-bg);
+  border-color: var(--info-fg);
 }
 
-.highlight.control {
-  background-color: var(--highlight-control);
-}
-
-.highlight.zalgo {
-  background-color: var(--highlight-zalgo);
-}
-
-.highlight.bidirectional {
-  background-color: var(--highlight-bidirectional);
-}
-
-.highlight.punctuation {
-  background-color: var(--highlight-punctuation);
-}
-
-.highlight.emoji {
-  background-color: var(--highlight-emoji);
-}
-
-.highlight.whitespace {
-  background-color: var(--highlight-whitespace);
-}
-
-.highlight.confused {
-  background-color: var(--highlight-confused);
+.chip[data-severity="clean"], #verdict[data-verdict="clean"] {
+  color: var(--clean-fg);
+  background-color: var(--clean-bg);
+  border-color: var(--clean-fg);
 }
 
 /* === フッター === */
@@ -255,7 +352,7 @@ footer {
 }
 
 .footer a {
-  color: var(--button-bg);
+  color: var(--link-color);
   text-decoration: none;
 }
 
@@ -265,34 +362,24 @@ footer {
 
 /* === モーダル === */
 .modal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  animation: fadeIn 0.3s ease;
+  padding: 0;
+  width: min(90%, 760px);
+  max-height: 90dvh;
+  background-color: var(--box-bg);
+  color: var(--text-color);
+  border: 1px solid var(--box-border);
+  border-radius: 8px;
 }
 
-.modal.show {
-  display: block;
+.modal::backdrop {
+  background-color: rgba(0, 0, 0, 0.6);
 }
 
 .modal-content {
-  background-color: var(--box-bg);
-  margin: 5% auto;
-  padding: 0;
-  border: 1px solid var(--box-border);
-  border-radius: 8px;
-  width: 90%;
-  max-width: 700px;
-  max-height: 80vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  animation: slideIn 0.3s ease;
+  max-height: 88dvh;
+  min-width: 0;
 }
 
 .modal-header {
@@ -315,8 +402,9 @@ footer {
   cursor: pointer;
   color: var(--text-color);
   padding: 0;
-  width: auto;
-  height: auto;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
   line-height: 1;
   transition: color 0.3s ease;
 }
@@ -384,5 +472,57 @@ footer {
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+fieldset {
+  min-width: 0;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+#input-stats, #view-limit, #table-limit {
+  color: var(--muted-color);
+}
+
+.modal-body td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  body {
+    margin: 12px;
+  }
+
+  h1 {
+    font-size: 1.6em;
+  }
+
+  .input-actions {
+    display: flex;
+    flex-direction: column;
+  }
+
+  fieldset label {
+    display: block;
+    margin: 0.5em 0;
+  }
+
+  .detail-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .modal-header, .modal-body {
+    padding: 1em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
   }
 }
