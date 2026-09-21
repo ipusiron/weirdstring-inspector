@@ -125,7 +125,7 @@ const expected = {
   "script.Other": "その他"
 };
 test('pure classic scripts with conditional CommonJS exports', () => {
-  for (const file of ['weirdstring-logic.js', 'weirdstring-messages.js', 'weirdstring-data.js', 'samples.js']) {
+  for (const file of ['weirdstring-logic.js', 'weirdstring-messages.js', 'weirdstring-data.js', 'weirdstring-actions.js', 'samples.js']) {
     const source = read(file);
     assert.doesNotMatch(source, /\b(?:document|window|navigator|localStorage|console)\s*[.(]|\bfetch\s*\(/);
     assert.doesNotMatch(source, /^\s*(?:export|import)\s/m);
