@@ -56,7 +56,28 @@
     };
   }
 
-  const API = { buildRemovalPlan, removeSelected, compareTexts };
+  const MAX_FILE_BYTES = 1048576;
+
+  function decodeUtf8File(bytes) {
+    if (!(bytes instanceof Uint8Array)) throw new TypeError('Expected Uint8Array');
+    if (bytes.byteLength > MAX_FILE_BYTES) return { ok: false, reason: 'size' };
+    if ((bytes[0] === 0xff && bytes[1] === 0xfe) || (bytes[0] === 0xfe && bytes[1] === 0xff)) {
+      return { ok: false, reason: 'encoding' };
+    }
+    let text;
+    try {
+      text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
+    } catch {
+      return { ok: false, reason: 'utf8' };
+    }
+    let length = 0;
+    for (const ch of text) {
+      if (++length > L.MAX_CODE_POINTS) return { ok: false, reason: 'length' };
+    }
+    return { ok: true, text, bytes: bytes.byteLength, codePoints: length };
+  }
+
+  const API = { buildRemovalPlan, removeSelected, compareTexts, MAX_FILE_BYTES, decodeUtf8File };
   if (typeof module === 'object' && module.exports) {
     module.exports = API;
   } else {

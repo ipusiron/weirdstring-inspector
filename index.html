@@ -56,6 +56,14 @@
         <p id="input-stats"></p>
         <p id="input-message" role="status"></p>
 
+        <details id="file-panel" class="action-panel">
+          <summary>UTF-8ファイルから入力</summary>
+          <p>1ファイル、1MiB・100,000コードポイントまで。BOMと改行を保持します。内容は外部へ送信しません。</p>
+          <label for="file-input">読み込むUTF-8ファイル</label>
+          <input type="file" id="file-input">
+          <p id="file-status" role="status"></p>
+        </details>
+
         <h2>🔍 検出結果</h2>
         <p id="verdict" role="status" data-verdict="empty"></p>
 

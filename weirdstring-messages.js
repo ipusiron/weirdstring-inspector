@@ -209,6 +209,16 @@
     'compare.context': '{side}の前後8コードポイント：{text}',
     'compare.empty': '比較用変換で空になった入力があります。安全性や見た目の一致を意味しません。'
   });
+  Object.assign(ja, {
+    'file.reading': 'UTF-8ファイルを読み込んでいます。',
+    'file.success': '{name}を読み込みました（{bytes}バイト・{codePoints}コードポイント）。',
+    'file.size': 'ファイルが1MiBを超えています。元の入力は変更していません。',
+    'file.encoding': 'UTF-16には対応していません。UTF-8のファイルを選んでください。',
+    'file.utf8': '正しいUTF-8として読めませんでした。文字コードを推測して置き換える処理はしません。',
+    'file.length': '100,000コードポイントを超えています。元の入力は変更していません。',
+    'file.failure': 'ファイルを読み込めませんでした。元の入力は変更していません。',
+    'file.stale': '読み込み中に入力が変わったため、読み込んだ内容を適用しませんでした。'
+  });
   const API = { ja, format };
   if (typeof module === 'object' && module.exports) {
     module.exports = API;

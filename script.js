@@ -108,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initInput();
   initDetails();
   initActions();
+  document.getElementById('file-input').addEventListener('change', loadTextFile);
   
   // サンプルカテゴリ初期化
   initSampleTabs();
@@ -123,6 +124,13 @@ let currentResult = null;
 let revision = 0;
 let removalState = null;
 let comparisonState = null;
+let fileRequest = 0;
+const notices = new Map();
+
+function setNotice(id, key, params = {}) {
+  notices.set(id, { key, params });
+  document.getElementById(id).textContent = key ? t(key, params) : '';
+}
 
 function invalidateActions() {
   revision++;
@@ -550,5 +558,38 @@ function renderComparison() {
     container.append(element('pre', t('compare.context', {
       side: side.toUpperCase(), text: L.escapeForInput(diff[side === 'a' ? 'contextA' : 'contextB'])
     })));
+  }
+}
+
+async function loadTextFile() {
+  const input = document.getElementById('file-input');
+  const file = input.files[0];
+  if (!file) return;
+  const request = ++fileRequest;
+  const startedRevision = revision;
+  input.value = '';
+  if (file.size > A.MAX_FILE_BYTES) {
+    setNotice('file-status', 'file.size');
+    return;
+  }
+  setNotice('file-status', 'file.reading');
+  try {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    if (request !== fileRequest) return;
+    if (startedRevision !== revision) {
+      setNotice('file-status', 'file.stale');
+      return;
+    }
+    const result = A.decodeUtf8File(bytes);
+    if (!result.ok) {
+      setNotice('file-status', 'file.' + result.reason);
+      return;
+    }
+    setSampleText(result.text);
+    setNotice('file-status', 'file.success', {
+      name: L.escapeForInput(file.name), bytes: result.bytes, codePoints: result.codePoints
+    });
+  } catch {
+    if (request === fileRequest) setNotice('file-status', startedRevision === revision ? 'file.failure' : 'file.stale');
   }
 }

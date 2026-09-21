@@ -231,6 +231,7 @@ weirdstring-inspector/                     # 文字列に紛れた不審なUnico
 │   ├── escape.test.js                     # エスケープ表記の解釈と往復の検証
 │   ├── format.test.js                     # 行長と読みやすさの検証
 │   ├── html.test.js                       # CSP・ARIA・インライン属性なしの検証
+│   ├── io.test.js                         # UTF-8ファイルと入出力の境界の検証
 │   ├── japanese.test.js                   # 日本語16組と通常文の警告条件の検証
 │   ├── logic.test.js                      # 分類・重大度・語とスクリプト・隠された内容・双方向制御の検証
 │   ├── readme.test.js                     # 表（実物の例を含む）・数値・画像・ツリー・YAMLの検証
