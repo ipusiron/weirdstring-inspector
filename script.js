@@ -63,6 +63,18 @@ function parseUrlParameters() {
   } else setSampleText(incoming.text);
   sourceState = incoming;
   renderSource();
+  clearIncomingUrl();
+}
+
+// 読み込んだ中身を、URL の ? と # から消す（タブのURL欄と、戻る・進むの履歴に残さない）。ほかの値は残す
+function clearIncomingUrl() {
+  const next = WeirdStringLogic.stripLocation(location.search, location.hash);
+  if (next.search === location.search && next.hash === location.hash) return;
+  try {
+    history.replaceState(history.state, '', location.pathname + next.search + next.hash);
+  } catch (e) {
+    // 書き換えられない環境でも、読み込みは済んでいる
+  }
 }
 
 function renderSource() {

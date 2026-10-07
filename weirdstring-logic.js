@@ -485,10 +485,24 @@
       from: params === fragment ? 'hash' : 'query' };
   }
 
+  // 受け取った中身（text・source・attack_type・v・mode）を外した search と hash を返す。
+  // ほかの値（ページ内のアンカーなど）は残す。中身の値がなければ元のまま
+  const INCOMING_KEYS = ['text', 'source', 'attack_type', 'v', 'mode'];
+  function stripLocation(search, hash) {
+    const clean = (value, mark) => {
+      const params = new URLSearchParams(value.replace(/^[?#]/, ''));
+      if (!INCOMING_KEYS.some(key => params.has(key))) return value;
+      for (const key of INCOMING_KEYS) params.delete(key);
+      const rest = params.toString();
+      return rest ? mark + rest : '';
+    };
+    return { search: clean(search, '?'), hash: clean(hash, '#') };
+  }
+
   const API = {
     MAX_CODE_POINTS, VIEW_LIMIT, TABLE_LIMIT, CATEGORY_ORDER, SEVERITY_ORDER,
     asciiLookalikeOf, abbrOf, scriptOf, generalCategoryOf, describeCodePoint,
-    analyze, decodeEscapes, escapeForInput, needsEscapeMode, parseLocation
+    analyze, decodeEscapes, escapeForInput, needsEscapeMode, parseLocation, stripLocation
   };
   if (typeof module === 'object' && module.exports) {
     module.exports = API;
