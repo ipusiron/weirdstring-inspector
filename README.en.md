@@ -129,6 +129,7 @@ Fragments are not normally sent in HTTP requests, but recipients, history and th
 
 Legacy `?text=` and `#text=` integrations still work, with the fragment taking precedence and URL decoding performed once.
 For example, `?text=%2541` produces `%41`, not `A`. The query form reaches the hosting server and may be logged.
+After loading, the content parameters (text, source, attack_type, v, mode) are removed from the `?` and `#` of the URL, so they do not stay in the address bar or in back/forward history. However, the first URL stays in the browser's global browsing history (checked in the history databases of Edge and Firefox). Other values, such as in-page anchors, are kept.
 `source` and `attack_type` are untrusted display-only legacy parameters, not exported metadata.
 
 ## 🔬 Data and implementation

@@ -127,3 +127,22 @@ test('A-14: all 11 URL cases, hash precedence and no second decoding', () => {
   assert.equal(Array.from(result.source).length, 40);
 });
 
+
+test('A-15: loaded content is removed from the URL; other values and anchors stay', () => {
+  const cases = [
+    [['?text=a&source=x', ''], { search: '', hash: '' }],
+    [['', '#text=a%E2%80%AE&source=qr-risk-radar'], { search: '', hash: '' }],
+    [['', '#v=2&mode=escape&text=a%5Cr'], { search: '', hash: '' }],
+    [['?lang=en&text=a', '#section'], { search: '?lang=en', hash: '#section' }],
+    [['?text=q', '#text=h&x=1'], { search: '', hash: '#x=1' }],
+    [['?foo=1', '#bar'], { search: '?foo=1', hash: '#bar' }],
+    [['', ''], { search: '', hash: '' }]
+  ];
+  for (const [[search, hash], expected] of cases) assert.deepEqual(L.stripLocation(search, hash), expected, search + hash);
+  // script.js removes the content only after a successful load (a format error keeps the URL)
+  const script = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'script.js'), 'utf8');
+  const body = script.slice(script.indexOf('function parseUrlParameters'), script.indexOf('function clearIncomingUrl'));
+  assert.ok(body.indexOf('clearIncomingUrl()') > body.indexOf('renderSource()'));
+  assert.ok(body.indexOf('incoming.error') < body.indexOf('return;') && body.indexOf('clearIncomingUrl()') > body.lastIndexOf('return;'));
+  assert.match(script, /history\.replaceState\(history\.state, '', location\.pathname \+ next\.search \+ next\.hash\)/);
+});
