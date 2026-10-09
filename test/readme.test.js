@@ -139,3 +139,25 @@ test('documented directory tree contains every path with aligned explanations', 
   }
   assert.deepEqual(paths.sort(), walk(root).sort());
 });
+
+test('ユースケースの「このツールならではの使い方」の判定は計算部と一致する（日英）', () => {
+  const RLO = String.fromCharCode(0x202E);
+  const ZW = String.fromCharCode(0x200B);
+  const rlo = L.analyze('photo' + RLO + 'gpj.exe');
+  assert.equal(rlo.verdict, 'danger');
+  assert.equal(rlo.counts.bidi.danger, 1);
+  assert.equal(rlo.bidi.overrideCount, 1);
+  const zw = L.analyze('ab' + ZW + 'c');
+  assert.equal(zw.counts.invisible.danger, 1);
+  assert.equal(zw.length.codePoints, 4);
+  const homo = L.analyze(String.fromCharCode(0x0430) + 'pple');
+  assert.equal(homo.verdict, 'danger');
+  assert.equal(homo.counts.lookalike.danger, 1);
+  assert.equal(homo.chars[0].ascii, 'a');
+  assert.equal(L.asciiLookalikeOf(0x0430), 'a');
+  for (const doc of [md, en]) {
+    assert.ok(doc.includes('U+202E') && doc.includes('U+200B'));
+    assert.ok(doc.includes('\\u{202E}') && doc.includes('\\u{200B}'));
+    assert.ok(doc.includes(String.fromCharCode(0x0430) + 'pple'));
+  }
+});
