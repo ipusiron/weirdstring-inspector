@@ -54,6 +54,14 @@ Textareas normalize CR to LF, so file, sample and URL inputs containing CR are l
 
 ## 📚 Detection categories
 
+Ways of using this tool in particular
+
+- Finding a character that reverses a file name (spoofing and forensics classes): put U+202E (right-to-left override) into a file name, and a string like `photo\u{202E}gpj.exe` appears on screen with its extension swapped. Paste it with "interpret escape notation" and analyze, and it is judged dangerous, with one dangerous bidi (text-direction) finding and one override character. You can find, character by character, the trick of passing off an executable as an image
+- Counting hidden characters slipped into text (proofreading and copy-paste classes): a string like `ab\u{200B}c`, with one U+200B (zero-width space) between `ab` and `c`, looks like the 3 characters "abc" on screen but counts as 4 code points. Analyzed, it reports one dangerous invisible character. You can check whether hidden characters crept into pasted text by the gap from the visible character count
+- Mapping look-alike characters to their ASCII twin (homograph and spoofing classes): analyzing `аpple`, whose first letter is the Cyrillic а, is judged dangerous, reports one dangerous look-alike character, and maps that а to the ASCII a. You can match, one character at a time, a look-alike letter from another script mixed into Latin to its real letter
+
+## 📚 Detection categories
+
 | Key | Category | Scope |
 |---|---|---|
 | tag | Tag characters | Hidden tags; 3 known RGI tag flags are informational, unverified flag-shaped sequences are cautions |
