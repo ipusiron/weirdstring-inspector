@@ -187,6 +187,7 @@ The [complete annotated tree](README.md#-ディレクトリー構造) lists ever
 | File | Role |
 |---|---|
 | `index.html`, `style.css`, `script.js` | UI, events and state; classic scripts |
+| `theme-init.js` | Sets the theme before the first paint (loaded synchronously in `<head>`) |
 | `weirdstring-logic.js` | Analysis, escapes and legacy/versioned URL parsing |
 | `weirdstring-actions.js` | Removal, comparison, UTF-8 decoding, reports and shares |
 | `weirdstring-data.js`, `weirdstring-context-data.js` | Generated Unicode and context tables |

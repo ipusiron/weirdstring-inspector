@@ -1,12 +1,7 @@
 // --- ダークモード切替機能 ---
+// 初回のテーマは <head> の theme-init.js が最初の描画の前に決める。ここではボタンを合わせるだけ。
 function initTheme() {
-  let savedTheme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  try {
-    const stored = localStorage.getItem('theme');
-    if (stored === 'light' || stored === 'dark') savedTheme = stored;
-  } catch { /* Storage is optional. */ }
-  document.documentElement.setAttribute('data-theme', savedTheme);
-  updateThemeIcon(savedTheme);
+  updateThemeIcon(document.documentElement.getAttribute('data-theme'));
 }
 
 function toggleTheme() {

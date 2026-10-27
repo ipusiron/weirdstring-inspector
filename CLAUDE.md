@@ -20,6 +20,7 @@ This is a vanilla JavaScript single-page application with no build process or de
 - **samples.md**, **samples.en.md**: Generated sample references, including literal invisible characters
 - **README.md**, **README.en.md**: Japanese/English usage and limitations; metadata exists only in Japanese
 - **style.css**: Styling and layout
+- **theme-init.js**: Loaded synchronously in `<head>` after the stylesheet; sets `data-theme` before the first paint (saved `theme`, else system preference). `initTheme()` in script.js only syncs the button
 - **test/**: Dependency-free Node tests, including documentation and source invariants
 - **tools/**: Data/documentation generators and the bundled Unicode originals and license
 
