@@ -307,7 +307,9 @@ weirdstring-inspector/                     # 文字列に紛れた不審なUnico
 │   ├── readme.test.js                     # 表（実物の例を含む）・数値・画像・ツリー・YAMLの検証
 │   ├── samples.test.js                    # サンプルの判定と、samples.mdの実物がサンプルと一致することの検証
 │   ├── static.test.js                     # 純粋性・禁止している書き方・辞書・CI設定の検証
+│   ├── theme-init.test.js                 # テーマの初期判定と読み込み位置の検証
 │   └── url.test.js                        # URLからの入力（?text=と#text=）の検証
+├── theme-init.js                          # 最初の描画の前にテーマを決める（<head>で読み込む）
 ├── tools/                                 # 開発用のスクリプトとデータの原本（公開ページからは使わない）
 │   ├── build-confusables.js               # confusables.txtからweirdstring-data.jsを作り直す（--checkで差分の確認）
 │   ├── build-context-data.js              # 旗と異体字と日本語の追加データを生成
