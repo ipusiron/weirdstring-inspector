@@ -20,7 +20,7 @@ category_en:
   - Web Security
   - String Analysis
 
-difficulty: 4
+difficulty: 2
 
 tags:
   - unicode
