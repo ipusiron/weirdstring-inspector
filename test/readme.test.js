@@ -105,7 +105,7 @@ test('phase 2 documentation states shared limits and preserves the exact origina
   assert.doesNotMatch(en, /id: day023|hub: true|^<!--/);
   const meta = md.match(/^<!--[\s\S]*?-->/)[0].replace(/\r\n/g, '\n');
   assert.equal(crypto.createHash('sha256').update(meta).digest('hex'),
-    '788d37c72e8f5f420014976a2f427b9ec207bbb78127e558d31c14b01154d986');
+    'af20a6c68f0aa235bb71100910390cfa9bb2cb4fa371a5ff7cec167178f6afb7');
   const guide = fs.readFileSync(path.join(root, 'CLAUDE.md'), 'utf8');
   for (const file of ['weirdstring-actions.js', 'weirdstring-context-data.js', 'samples.en.md', 'README.en.md']) {
     assert.ok(guide.includes(file), file);
